@@ -1,0 +1,234 @@
+package io.dp.weather.app.adapter
+
+import android.content.Context
+import android.content.SharedPreferences
+import android.database.Cursor
+import android.support.v4.app.FragmentActivity
+import android.support.v4.util.LruCache
+import android.text.TextUtils
+import android.text.format.DateUtils
+import android.view.LayoutInflater
+import android.view.MenuItem
+import android.view.View
+import android.view.ViewGroup
+import android.widget.ImageView
+import android.widget.PopupMenu
+import android.widget.ProgressBar
+import android.widget.TextView
+import butterknife.ButterKnife
+import butterknife.InjectView
+import com.google.gson.Gson
+import com.squareup.otto.Bus
+import com.squareup.picasso.Picasso
+import com.trello.rxlifecycle.components.ActivityLifecycleProvider
+import io.dp.weather.app.Const
+import io.dp.weather.app.R
+import io.dp.weather.app.SchedulersManager
+import io.dp.weather.app.annotation.CachePrefs
+import io.dp.weather.app.annotation.PerActivity
+import io.dp.weather.app.db.OrmliteCursorAdapter
+import io.dp.weather.app.db.table.Place
+import io.dp.weather.app.event.DeletePlaceEvent
+import io.dp.weather.app.net.WeatherApi
+import io.dp.weather.app.net.dto.Forecast
+import io.dp.weather.app.utils.MetricsController
+import io.dp.weather.app.utils.WhiteBorderCircleTransformation
+import io.dp.weather.app.widget.WeatherFor5DaysView
+import rx.Subscriber
+import javax.inject.Inject
+
+/**
+ * Created by dp on 08/10/14.
+ */
+@PerActivity
+public class PlacesAdapter
+@Inject constructor(private val activity: FragmentActivity, private val gson: Gson, private val api: WeatherApi, private val bus: Bus) : OrmliteCursorAdapter<Place>(activity, null, null) {
+
+    private val inflater: LayoutInflater
+    private var prefs: SharedPreferences? = null
+
+    private val cache = LruCache<Long, Forecast>(16)
+
+    private var schedulersManager: SchedulersManager? = null
+    private var metrics: MetricsController? = null
+
+    private val transformation = WhiteBorderCircleTransformation()
+
+    init {
+        this.inflater = LayoutInflater.from(activity)
+    }
+
+    @Inject public fun setMetricsController(metrics: MetricsController) {
+        this.metrics = metrics
+    }
+
+    @Inject public fun setSharedPreferences(@CachePrefs prefs: SharedPreferences) {
+        this.prefs = prefs
+    }
+
+    @Inject public fun setSchedulersManager(schedulersManager: SchedulersManager) {
+        this.schedulersManager = schedulersManager
+    }
+
+    public fun clear() {
+        this.cache.evictAll()
+        this.prefs!!.edit().clear().apply()
+    }
+
+    override fun newView(context: Context, cursor: Cursor, viewGroup: ViewGroup): View {
+        val v = this.inflater.inflate(R.layout.item_city_weather, viewGroup, false)
+        val holder = ViewHolder(v)
+        v.tag = holder
+        return v
+    }
+
+    override fun bindView(itemView: View, context: Context, place: Place?) {
+        val holder = itemView.tag as ViewHolder
+
+        val hash = "${place?.hashCode()}"
+        holder.cityName.text = place?.name
+        holder.temperatureView.text = ""
+
+        holder.menuView.tag = place?.id
+        holder.menuView.setOnClickListener(popupOnClickListener)
+
+        if (metrics!!.useCelsius()) {
+            holder.degreeTypeView.setText(R.string.celcius)
+        } else {
+            holder.degreeTypeView.setText(R.string.fahrenheit)
+        }
+
+        val lastRequestTime = prefs!!.getLong(hash + "_time", -1)
+        if (lastRequestTime.equals(-1) || (lastRequestTime > 0 && (System.currentTimeMillis() - lastRequestTime) > DateUtils.DAY_IN_MILLIS)) {
+
+            holder.progressView.visibility = View.VISIBLE
+            holder.contentView.visibility = View.GONE
+
+            val lat = place?.lat
+            val lon = place?.lon
+
+            val provider = activity as ActivityLifecycleProvider
+
+            val query = "$lat,$lon"
+            api.getForecast(query, Const.FORECAST_FOR_DAYS).compose(schedulersManager!!.applySchedulers<Any>(provider)).subscribe {
+                forecast -> ForecastCacheSubscriber(hash)
+            }
+        } else {
+            holder.progressView.visibility = View.GONE
+            holder.contentView.visibility = View.VISIBLE
+
+            var f = cache.get(place?.id)
+            if (f == null) {
+                // forecast exists - load it from cache
+                val rawForecast = prefs!!.getString(hash, null)
+                f = gson.fromJson(rawForecast, Forecast::class.java)
+                cache.put(place?.id, f)
+            }
+
+            val conditions = f!!.data?.currentCondition
+            if (conditions != null && conditions!!.size() > 0) {
+                val condition = conditions!!.get(0)
+
+                holder.humidityView.setText(condition.humidity + "%")
+
+                try {
+                    val pressure = Integer.valueOf(condition.pressure)!!
+
+                    if (metrics!!.useMmhg()) {
+                        holder.pressureView.text = context.getString(R.string.fmt_pressure_mmhg,
+                                (pressure * Const.CONVERT_MMHG).toInt())
+                    } else {
+                        holder.pressureView.text = context.getString(R.string.fmt_pressure_kpa, pressure)
+                    }
+                } catch (e: NumberFormatException) {
+                    holder.pressureView.setText(R.string.undef)
+                }
+
+                val sb = StringBuilder()
+                sb.append(condition.winddir16Point).append(", ")
+                if (metrics!!.useKmph()) {
+                    sb.append(context.getString(R.string.fmt_windspeed_kmph, condition.windspeedKmph))
+                } else {
+                    sb.append(context.getString(R.string.fmt_windspeed_mph, condition.windspeedMiles))
+                }
+
+                holder.windView.text = sb.toString()
+
+                val descList = condition.weatherDesc
+                if (descList != null && descList.size() > 0) {
+                    val description = descList.get(0).value
+                    holder.weatherDescView.setText(description)
+                }
+
+                if (metrics!!.useCelsius()) {
+                    holder.temperatureView.setText(condition.tempC)
+                } else {
+                    holder.temperatureView.setText(condition.tempF)
+                }
+
+                val urls = conditions.get(0).weatherIconUrl
+
+                if (urls != null && urls.size() > 0) {
+                    val url = urls.get(0).value
+                    Picasso.with(activity).load(if (!TextUtils.isEmpty(url)) url else null).transform(transformation).into(holder.weatherState)
+                }
+            }
+
+            holder.weatherFor5DaysView.setWeatherForWeek(f.data!!.weather, metrics!!.useCelsius(),
+                    transformation)
+        }
+    }
+
+    private inner class ForecastCacheSubscriber(private val hash: String) : Subscriber<Forecast>() {
+
+        override public fun onCompleted() {
+        }
+
+        override public fun onError(e: Throwable) {
+        }
+
+        override public fun onNext(forecast: Forecast) {
+            prefs!!.edit().putLong(hash + "_time", System.currentTimeMillis()).apply()
+            prefs!!.edit().putString(hash, gson.toJson(forecast)).apply()
+            notifyDataSetChanged()
+        }
+    }
+
+    var popupOnClickListener: View.OnClickListener = object : View.OnClickListener {
+        override fun onClick(v: View) {
+            val id = v.tag as Long
+
+            val popupMenu = PopupMenu(activity, v)
+            popupMenu.inflate(R.menu.item_place)
+
+            popupMenu.setOnMenuItemClickListener(object : PopupMenu.OnMenuItemClickListener {
+                override fun onMenuItemClick(item: MenuItem): Boolean {
+                    bus.post(DeletePlaceEvent(id))
+                    return true
+                }
+            })
+
+            popupMenu.show()
+        }
+    }
+
+    class ViewHolder(view: View) {
+
+        @InjectView(R.id.weather_state) lateinit val weatherState: ImageView
+        @InjectView(R.id.city_name) lateinit val cityName: TextView
+        @InjectView(R.id.weather_for_week) lateinit val weatherFor5DaysView: WeatherFor5DaysView
+        @InjectView(R.id.temperature) lateinit val temperatureView: TextView
+        @InjectView(R.id.degrees_type) lateinit val degreeTypeView: TextView
+        @InjectView(R.id.weather_description) lateinit val weatherDescView: TextView
+        @InjectView(R.id.progress) lateinit val progressView: ProgressBar
+        @InjectView(R.id.content) lateinit val contentView: View
+        @InjectView(R.id.menu) lateinit val menuView: View
+        @InjectView(R.id.humidity) lateinit val humidityView: TextView
+        @InjectView(R.id.pressure) lateinit val pressureView: TextView
+        @InjectView(R.id.wind) lateinit val windView: TextView
+
+        init {
+            ButterKnife.inject(this, view)
+        }
+    }
+}

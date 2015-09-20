@@ -1,0 +1,114 @@
+buildscript {
+  ext.kotlin_version = '0.13.1513'
+  repositories {
+    jcenter()
+
+    maven {
+      url 'http://oss.sonatype.org/content/repositories/snapshots'
+    }
+  }
+
+  dependencies {
+    classpath 'com.android.tools.build:gradle:1.3.0'
+
+    classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+    classpath "org.jetbrains.kotlin:kotlin-android-extensions:$kotlin_version"
+  }
+}
+
+apply plugin: 'com.android.application'
+apply plugin: 'kotlin-android'
+
+android {
+  compileSdkVersion 23
+  buildToolsVersion "23.0.1"
+
+  defaultConfig {
+    applicationId "io.dp.weather.app"
+    minSdkVersion 14
+    targetSdkVersion 23
+    versionCode 1
+    versionName "1.0"
+    testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+
+    buildConfigField "int", "DATABASE_VERSION", "1";
+    buildConfigField "String", "FORECAST_API_URL",
+        "\"https://api.worldweatheronline.com/free/v1/\""
+    buildConfigField "String", "FORECAST_API_KEY",
+        "\"499cb12ae4fc7740adee2fa7b2007982f75338c0\""
+    buildConfigField "String", "PLACES_API_URL", "\"https://maps.googleapis.com/maps/api/\""
+    buildConfigField "String", "PLACES_API_KEY", "\"AIzaSyA0o8WdYc40tWfRrKimdAWHvaFwW8h-N8w\""
+  }
+
+  signingConfigs {
+    release {
+      storeFile file("my-release-key.keystore")
+      storePassword "12345678"
+      keyAlias "alias_name"
+      keyPassword "12345678"
+    }
+  }
+
+  buildTypes {
+    release {
+      signingConfig signingConfigs.release
+    }
+  }
+
+  packagingOptions {
+    exclude 'META-INF/services/javax.annotation.processing.Processor'
+  }
+
+  lintOptions {
+    abortOnError false
+  }
+
+  testOptions {
+    unitTests.returnDefaultValues = true
+  }
+
+  sourceSets {
+    main.java.srcDirs += 'src/main/kotlin'
+  }
+}
+
+dependencies {
+  compile fileTree(dir: 'libs', include: ['*.jar'])
+
+  compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+
+  compile 'com.android.support:support-v4:23.0.1'
+  compile 'com.android.support:appcompat-v7:23.0.1'
+
+  compile 'com.squareup.retrofit:retrofit:1.9.0'
+  compile 'com.google.dagger:dagger:2.0.1'
+  kapt 'com.google.dagger:dagger-compiler:2.0.1'
+  provided 'org.glassfish:javax.annotation:10.0-b28'
+
+  compile 'com.google.dagger:dagger-producers:2.0-beta'
+
+  compile 'com.jakewharton:butterknife:6.1.0'
+  compile 'com.squareup.picasso:picasso:2.3.4'
+
+  compile 'com.squareup:otto:1.3.6'
+  compile 'com.jakewharton.timber:timber:2.4.1'
+  compile 'com.etsy.android.grid:library:1.0.5'
+  compile 'com.j256.ormlite:ormlite-android:4.48'
+
+  compile 'io.reactivex:rxkotlin:0.22.13'
+  compile 'io.reactivex:rxandroid:1.0.1'
+  compile 'com.trello:rxlifecycle:0.2.0'
+  compile 'com.trello:rxlifecycle-components:0.2.0'
+
+
+  kaptTest 'com.google.dagger:dagger-compiler:2.0.1'
+  testCompile 'junit:junit:4.11'
+  testCompile 'org.glassfish:javax.annotation:10.0-b28'
+  testCompile 'org.hamcrest:hamcrest-integration:1.1'
+  testCompile 'org.hamcrest:hamcrest-core:1.1'
+  testCompile 'org.hamcrest:hamcrest-library:1.1'
+  testCompile 'com.squareup.retrofit:retrofit-mock:1.9.0'
+  testCompile 'org.mockito:mockito-all:1.9.5'
+  testCompile 'org.robolectric:robolectric:3.0'
+  testCompile 'org.robolectric:shadows-support-v4:3.0'
+}

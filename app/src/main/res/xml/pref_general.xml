@@ -1,0 +1,21 @@
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <SwitchPreference
+            android:key="temperature_switch"
+            android:title="@string/pref_title_temperature"
+            android:summary="@string/pref_description_temperature_units"
+            android:defaultValue="false"/>
+
+    <SwitchPreference
+            android:key="use_mmhg"
+            android:title="@string/pref_title_pressure"
+            android:summary="@string/pref_description_pressure_units"
+            android:defaultValue="false"/>
+
+    <SwitchPreference
+            android:key="use_kmph"
+            android:title="@string/pref_title_wind"
+            android:summary="@string/pref_description_wind_units"
+            android:defaultValue="false"/>
+
+</PreferenceScreen>

@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:layout_width="150dip"
+              android:layout_height="wrap_content"
+              android:orientation="vertical"
+              android:background="@drawable/card"
+              android:descendantFocusability="blocksDescendants">
+
+    <include android:id="@+id/content"
+             layout="@layout/item_place_content"/>
+
+    <ProgressBar android:id="@+id/progress"
+                 android:layout_width="50dip"
+                 android:layout_height="50dip"
+                 android:layout_gravity="center"/>
+
+    <View android:id="@+id/divider"
+          android:layout_width="match_parent"
+          android:layout_height="1dip"
+          android:background="#ff377ea1"/>
+
+    <RelativeLayout android:layout_width="match_parent"
+                  android:layout_height="wrap_content">
+
+        <TextView android:id="@+id/city_name"
+                  android:layout_width="wrap_content"
+                  android:layout_height="wrap_content"
+                  android:layout_alignParentLeft="true"
+                  android:layout_centerVertical="true"
+                  android:textSize="18sp"
+                  android:textStyle="bold"
+                  android:text="London"
+                  android:padding="8dip"/>
+
+        <Button
+                android:id="@+id/menu"
+                android:layout_width="30dip"
+                android:layout_height="30dip"
+                android:padding="8dip"
+                android:layout_alignParentRight="true"
+                android:layout_centerVertical="true"
+                android:background="@drawable/ico_menu_small"/>
+
+    </RelativeLayout>
+
+</LinearLayout>
