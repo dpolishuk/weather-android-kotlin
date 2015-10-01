@@ -13,7 +13,7 @@ public abstract class BaseFragment : RxFragment() {
     public var component: BaseActivityComponent? = null
         private set
 
-    override fun onActivityCreated(savedInstanceState: Bundle) {
+    override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
 
         val activity = getActivity() as HasComponent<BaseActivityComponent>

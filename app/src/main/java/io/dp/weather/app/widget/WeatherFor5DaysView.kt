@@ -27,16 +27,15 @@ import io.dp.weather.app.net.dto.Weather
 public class WeatherFor5DaysView : LinearLayout {
 
     @InjectViews(R.id.day_name_1, R.id.day_name_2, R.id.day_name_3, R.id.day_name_4, R.id.day_name_5)
-    lateinit val dayNameViews: Array<TextView>
+    lateinit var dayNameViews: Array<TextView>
 
     @InjectViews(R.id.day_1, R.id.day_2, R.id.day_3, R.id.day_4, R.id.day_5)
-    lateinit val dayViews: Array<ImageView>
+    lateinit var dayViews: Array<ImageView>
 
     @InjectViews(R.id.temp_1, R.id.temp_2, R.id.temp_3, R.id.temp_4, R.id.temp_5)
-    lateinit val tempViews: Array<TextView>
+    lateinit var tempViews: Array<TextView>
 
     lateinit var t: Transformation
-    lateinit var context: Context
 
     var celsius: String? = null
     var fahrenheit: String? = null
@@ -50,7 +49,6 @@ public class WeatherFor5DaysView : LinearLayout {
     }
 
     private fun init(context: Context) {
-        this.context = context
         LayoutInflater.from(context).inflate(R.layout.view_weather_for_week, this, true)
 
         celsius = context.getString(R.string.celcius)

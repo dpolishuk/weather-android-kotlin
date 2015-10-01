@@ -14,8 +14,8 @@ import java.util.*
  */
 public class OrmliteListLoader<T, ID>(context: Context, dao: Dao<T, ID>, query: PreparedQuery<T>) : AsyncTaskLoader<List<T>>(context) {
 
-    private lateinit val dao: Dao<T, ID>
-    private lateinit val query: PreparedQuery<T>
+    private lateinit var dao: Dao<T, ID>
+    private lateinit var query: PreparedQuery<T>
     private var data: List<T>? = null
 
     init {

@@ -6,7 +6,7 @@ import io.dp.weather.app.R
 
 public class MainActivity : BaseActivity() {
 
-    override fun onCreate(savedInstanceState: Bundle) {
+    override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
     }

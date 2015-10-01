@@ -34,7 +34,6 @@ import io.dp.weather.app.net.dto.Forecast
 import io.dp.weather.app.utils.MetricsController
 import io.dp.weather.app.utils.WhiteBorderCircleTransformation
 import io.dp.weather.app.widget.WeatherFor5DaysView
-import rx.Subscriber
 import javax.inject.Inject
 
 /**
@@ -110,8 +109,14 @@ public class PlacesAdapter
             val provider = activity as ActivityLifecycleProvider
 
             val query = "$lat,$lon"
-            api.getForecast(query, Const.FORECAST_FOR_DAYS).compose(schedulersManager!!.applySchedulers<Any>(provider)).subscribe {
-                forecast -> ForecastCacheSubscriber(hash)
+            api.getForecast(query, Const.FORECAST_FOR_DAYS)
+                .compose(schedulersManager!!.applySchedulers<Any>(provider))
+                .subscribe {
+                forecast -> {
+                    prefs!!.edit().putLong(hash + "_time", System.currentTimeMillis()).apply()
+                    prefs!!.edit().putString(hash, gson.toJson(forecast)).apply()
+                    notifyDataSetChanged()
+                }
             }
         } else {
             holder.progressView.visibility = View.GONE
@@ -179,21 +184,6 @@ public class PlacesAdapter
         }
     }
 
-    private inner class ForecastCacheSubscriber(private val hash: String) : Subscriber<Forecast>() {
-
-        override public fun onCompleted() {
-        }
-
-        override public fun onError(e: Throwable) {
-        }
-
-        override public fun onNext(forecast: Forecast) {
-            prefs!!.edit().putLong(hash + "_time", System.currentTimeMillis()).apply()
-            prefs!!.edit().putString(hash, gson.toJson(forecast)).apply()
-            notifyDataSetChanged()
-        }
-    }
-
     var popupOnClickListener: View.OnClickListener = object : View.OnClickListener {
         override fun onClick(v: View) {
             val id = v.tag as Long
@@ -214,18 +204,18 @@ public class PlacesAdapter
 
     class ViewHolder(view: View) {
 
-        @InjectView(R.id.weather_state) lateinit val weatherState: ImageView
-        @InjectView(R.id.city_name) lateinit val cityName: TextView
-        @InjectView(R.id.weather_for_week) lateinit val weatherFor5DaysView: WeatherFor5DaysView
-        @InjectView(R.id.temperature) lateinit val temperatureView: TextView
-        @InjectView(R.id.degrees_type) lateinit val degreeTypeView: TextView
-        @InjectView(R.id.weather_description) lateinit val weatherDescView: TextView
-        @InjectView(R.id.progress) lateinit val progressView: ProgressBar
-        @InjectView(R.id.content) lateinit val contentView: View
-        @InjectView(R.id.menu) lateinit val menuView: View
-        @InjectView(R.id.humidity) lateinit val humidityView: TextView
-        @InjectView(R.id.pressure) lateinit val pressureView: TextView
-        @InjectView(R.id.wind) lateinit val windView: TextView
+        @InjectView(R.id.weather_state) lateinit var weatherState: ImageView
+        @InjectView(R.id.city_name) lateinit var cityName: TextView
+        @InjectView(R.id.weather_for_week) lateinit var weatherFor5DaysView: WeatherFor5DaysView
+        @InjectView(R.id.temperature) lateinit var temperatureView: TextView
+        @InjectView(R.id.degrees_type) lateinit var degreeTypeView: TextView
+        @InjectView(R.id.weather_description) lateinit var weatherDescView: TextView
+        @InjectView(R.id.progress) lateinit var progressView: ProgressBar
+        @InjectView(R.id.content) lateinit var contentView: View
+        @InjectView(R.id.menu) lateinit var menuView: View
+        @InjectView(R.id.humidity) lateinit var humidityView: TextView
+        @InjectView(R.id.pressure) lateinit var pressureView: TextView
+        @InjectView(R.id.wind) lateinit var windView: TextView
 
         init {
             ButterKnife.inject(this, view)

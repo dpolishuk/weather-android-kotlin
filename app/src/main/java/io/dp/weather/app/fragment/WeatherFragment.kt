@@ -43,15 +43,15 @@ public class WeatherFragment : BaseFragment(), LoaderManager.LoaderCallbacks<Cur
 
     var subscriptionList: MutableList<Subscription> = ArrayList()
 
-    @Inject lateinit val geocoder: Geocoder
-    @Inject lateinit val adapter: PlacesAdapter
-    @Inject lateinit val dbHelper: DatabaseHelper
-    @Inject lateinit val bus: Bus
-    @Inject lateinit val placesAutoCompleteAdapter: PlacesAutoCompleteAdapter
-    @Inject lateinit val schedulersManager: SchedulersManager
-    @InjectView(R.id.grid) lateinit val gridView: StaggeredGridView
+    @Inject lateinit var geocoder: Geocoder
+    @Inject lateinit var adapter: PlacesAdapter
+    @Inject lateinit var dbHelper: DatabaseHelper
+    @Inject lateinit var bus: Bus
+    @Inject lateinit var placesAutoCompleteAdapter: PlacesAutoCompleteAdapter
+    @Inject lateinit var schedulersManager: SchedulersManager
+    @InjectView(R.id.grid) lateinit var gridView: StaggeredGridView
 
-    @InjectView(R.id.swipe_layout) lateinit val swipeRefreshView: SwipeRefreshLayout
+    @InjectView(R.id.swipe_layout) lateinit var swipeRefreshView: SwipeRefreshLayout
 
     override fun onCreateView(inflater: LayoutInflater?, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
@@ -64,7 +64,7 @@ public class WeatherFragment : BaseFragment(), LoaderManager.LoaderCallbacks<Cur
         return v
     }
 
-    override fun onActivityCreated(savedInstanceState: Bundle) {
+    override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
 
         (component as BusSubcomponent).inject(this)
@@ -141,7 +141,7 @@ public class WeatherFragment : BaseFragment(), LoaderManager.LoaderCallbacks<Cur
         }
     }
 
-    override fun onCreateLoader(i: Int, bundle: Bundle): Loader<Cursor>? {
+    override fun onCreateLoader(i: Int, bundle: Bundle?): Loader<Cursor>? {
         try {
             return OrmliteCursorLoader(activity, dbHelper.getPlaceDao(), adapter.query)
         } catch (e: SQLException) {

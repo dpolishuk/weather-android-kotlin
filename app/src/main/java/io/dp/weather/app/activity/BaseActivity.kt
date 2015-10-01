@@ -11,7 +11,7 @@ import io.dp.weather.app.WeatherApp
 public open class BaseActivity : RxAppCompatActivity(), HasComponent<BaseActivityComponent> {
     private var component: BaseActivityComponent? = null
 
-    override protected fun onCreate(savedInstanceState: Bundle) {
+    override protected fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         this.component = createComponent()
     }
