@@ -1,16 +1,13 @@
 package io.dp.weather.app.annotation
 
-import java.lang.annotation.Documented
-import java.lang.annotation.Retention
-
 import javax.inject.Qualifier
 
-import java.lang.annotation.RetentionPolicy.RUNTIME
+import kotlin.annotation.AnnotationRetention.RUNTIME
 
 /**
  * Created by dp on 11/10/14.
  */
 @Qualifier
-@Documented
+@MustBeDocumented
 @Retention(RUNTIME)
 annotation public class ConfigPrefs

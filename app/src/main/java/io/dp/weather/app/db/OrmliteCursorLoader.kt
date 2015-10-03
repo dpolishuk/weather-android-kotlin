@@ -1,16 +1,13 @@
 package io.dp.weather.app.db
 
 import android.content.Context
-import android.database.ContentObserver
 import android.database.Cursor
 import android.support.v4.content.AsyncTaskLoader
 import android.support.v4.content.Loader
-
 import com.j256.ormlite.android.AndroidDatabaseResults
 import com.j256.ormlite.dao.BaseDaoImpl
 import com.j256.ormlite.dao.Dao
 import com.j256.ormlite.stmt.PreparedQuery
-
 import java.io.FileDescriptor
 import java.io.PrintWriter
 import java.sql.SQLException
@@ -25,7 +22,6 @@ public class OrmliteCursorLoader<T>(context: Context, public val dao: Dao<T, *>?
 
     private var cursor: Cursor? = null
 
-
     /* Runs on a worker thread */
 
     override fun loadInBackground(): Cursor? {
@@ -39,7 +35,7 @@ public class OrmliteCursorLoader<T>(context: Context, public val dao: Dao<T, *>?
         if (cursor != null) {
             // Ensure the cursor window is filled
             cursor.count
-            registerContentObserver(cursor, observer)
+            registerContentObserver(cursor)
         }
         return cursor
     }
@@ -57,7 +53,7 @@ public class OrmliteCursorLoader<T>(context: Context, public val dao: Dao<T, *>?
      * Registers an observer to get notifications from the content provider when the cursor needs to
      * be refreshed.
      */
-    fun registerContentObserver(cursor: Cursor, observer: ContentObserver) {
+    fun registerContentObserver(cursor: Cursor) {
         cursor.registerContentObserver(this.observer)
     }
 

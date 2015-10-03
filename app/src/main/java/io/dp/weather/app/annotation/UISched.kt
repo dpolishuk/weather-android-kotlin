@@ -1,15 +1,13 @@
 package io.dp.weather.app.annotation
 
-import java.lang.annotation.Documented
-import java.lang.annotation.Retention
 import javax.inject.Qualifier
 
-import java.lang.annotation.RetentionPolicy.RUNTIME
+import kotlin.annotation.AnnotationRetention.RUNTIME
 
 /**
  * Created by deepol on 11/09/15.
  */
 @Qualifier
-@Documented
+@MustBeDocumented
 @Retention(RUNTIME)
 annotation public class UISched

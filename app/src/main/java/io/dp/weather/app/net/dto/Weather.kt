@@ -1,13 +1,10 @@
 package io.dp.weather.app.net.dto
 
-import com.google.gson.annotations.Expose
-
 import android.os.Parcel
 import android.os.Parcelable
-
-import java.util.ArrayList
-
+import com.google.gson.annotations.Expose
 import io.dp.weather.app.WeatherIconUrl
+import java.util.*
 
 public class Weather : Parcelable {
 
@@ -40,62 +37,62 @@ public class Weather : Parcelable {
     @Expose
     public var windspeedMiles: String? = null
 
-    override fun equals(o: Any?): Boolean {
-        if (this === o) {
+    override fun equals(other: Any?): Boolean {
+        if (this === other) {
             return true
         }
-        if (o !is Weather) {
+        if (other !is Weather) {
             return false
         }
 
-        if (if (date != null) date != o.date else o.date != null) {
+        if (if (date != null) date != other.date else other.date != null) {
             return false
         }
-        if (if (precipMM != null) precipMM != o.precipMM else o.precipMM != null) {
+        if (if (precipMM != null) precipMM != other.precipMM else other.precipMM != null) {
             return false
         }
-        if (if (tempMaxC != null) tempMaxC != o.tempMaxC else o.tempMaxC != null) {
+        if (if (tempMaxC != null) tempMaxC != other.tempMaxC else other.tempMaxC != null) {
             return false
         }
-        if (if (tempMaxF != null) tempMaxF != o.tempMaxF else o.tempMaxF != null) {
+        if (if (tempMaxF != null) tempMaxF != other.tempMaxF else other.tempMaxF != null) {
             return false
         }
-        if (if (tempMinC != null) tempMinC != o.tempMinC else o.tempMinC != null) {
+        if (if (tempMinC != null) tempMinC != other.tempMinC else other.tempMinC != null) {
             return false
         }
-        if (if (tempMinF != null) tempMinF != o.tempMinF else o.tempMinF != null) {
+        if (if (tempMinF != null) tempMinF != other.tempMinF else other.tempMinF != null) {
             return false
         }
-        if (if (weatherCode != null) weatherCode != o.weatherCode
-        else o.weatherCode != null) {
+        if (if (weatherCode != null) weatherCode != other.weatherCode
+        else other.weatherCode != null) {
             return false
         }
-        if (if (weatherDesc != null) weatherDesc != o.weatherDesc
-        else o.weatherDesc != null) {
+        if (if (weatherDesc != null) weatherDesc != other.weatherDesc
+        else other.weatherDesc != null) {
             return false
         }
-        if (if (weatherIconUrl != null) weatherIconUrl != o.weatherIconUrl
-        else o.weatherIconUrl != null) {
+        if (if (weatherIconUrl != null) weatherIconUrl != other.weatherIconUrl
+        else other.weatherIconUrl != null) {
             return false
         }
-        if (if (winddir16Point != null) winddir16Point != o.winddir16Point
-        else o.winddir16Point != null) {
+        if (if (winddir16Point != null) winddir16Point != other.winddir16Point
+        else other.winddir16Point != null) {
             return false
         }
-        if (if (winddirDegree != null) winddirDegree != o.winddirDegree
-        else o.winddirDegree != null) {
+        if (if (winddirDegree != null) winddirDegree != other.winddirDegree
+        else other.winddirDegree != null) {
             return false
         }
-        if (if (winddirection != null) winddirection != o.winddirection
-        else o.winddirection != null) {
+        if (if (winddirection != null) winddirection != other.winddirection
+        else other.winddirection != null) {
             return false
         }
-        if (if (windspeedKmph != null) windspeedKmph != o.windspeedKmph
-        else o.windspeedKmph != null) {
+        if (if (windspeedKmph != null) windspeedKmph != other.windspeedKmph
+        else other.windspeedKmph != null) {
             return false
         }
-        if (if (windspeedMiles != null) windspeedMiles != o.windspeedMiles
-        else o.windspeedMiles != null) {
+        if (if (windspeedMiles != null) windspeedMiles != other.windspeedMiles
+        else other.windspeedMiles != null) {
             return false
         }
 

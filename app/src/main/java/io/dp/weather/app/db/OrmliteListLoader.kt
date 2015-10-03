@@ -27,11 +27,7 @@ public class OrmliteListLoader<T, ID>(context: Context, dao: Dao<T, ID>, query: 
         val result: ArrayList<T> = ArrayList<T>()
 
         try {
-            if (query != null) {
-                result.addAll(dao!!.query(query))
-            } else {
-                result.addAll(dao!!.queryForAll())
-            }
+            result.addAll(dao.query(query))
 
         } catch (e: SQLException) {
         }

@@ -1,9 +1,8 @@
 package io.dp.weather.app.annotation
 
-import java.lang.annotation.Retention
 import javax.inject.Scope
 
-import java.lang.annotation.RetentionPolicy.RUNTIME
+import kotlin.annotation.AnnotationRetention.RUNTIME
 
 /**
  * A scoping annotation to permit objects whose lifetime should

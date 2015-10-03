@@ -1,24 +1,23 @@
 package io.dp.weather.app.net.dto
 
-import com.google.gson.annotations.Expose
-
 import android.os.Parcel
 import android.os.Parcelable
+import com.google.gson.annotations.SerializedName
 
 public data class Forecast() : Parcelable {
 
-    @Expose
+    @SerializedName("data")
     public var data: Data? = null
 
-    override fun equals(o: Any?): Boolean {
-        if (this === o) {
+    override fun equals(other: Any?): Boolean {
+        if (this === other) {
             return true
         }
-        if (o !is Forecast) {
+        if (other !is Forecast) {
             return false
         }
 
-        if (if (data != null) data != o.data else o.data != null) {
+        if (if (data != null) data != other.data else other.data != null) {
             return false
         }
 

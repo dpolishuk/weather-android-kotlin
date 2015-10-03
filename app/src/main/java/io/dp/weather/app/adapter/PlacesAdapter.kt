@@ -41,7 +41,8 @@ import javax.inject.Inject
  */
 @PerActivity
 public class PlacesAdapter
-@Inject constructor(private val activity: FragmentActivity, private val gson: Gson, private val api: WeatherApi, private val bus: Bus) : OrmliteCursorAdapter<Place>(activity, null, null) {
+@Inject constructor(private val activity: FragmentActivity, private val gson: Gson, private val api: WeatherApi, private val bus: Bus) : OrmliteCursorAdapter<Place>(
+        activity, null, null) {
 
     private val inflater: LayoutInflater
     private var prefs: SharedPreferences? = null
@@ -81,14 +82,14 @@ public class PlacesAdapter
         return v
     }
 
-    override fun bindView(itemView: View, context: Context, place: Place?) {
+    override fun bindView(itemView: View, context: Context, item: Place?) {
         val holder = itemView.tag as ViewHolder
 
-        val hash = "${place?.hashCode()}"
-        holder.cityName.text = place?.name
+        val hash = "${item?.hashCode()}"
+        holder.cityName.text = item?.name
         holder.temperatureView.text = ""
 
-        holder.menuView.tag = place?.id
+        holder.menuView.tag = item?.id
         holder.menuView.setOnClickListener(popupOnClickListener)
 
         if (metrics!!.useCelsius()) {
@@ -98,52 +99,53 @@ public class PlacesAdapter
         }
 
         val lastRequestTime = prefs!!.getLong(hash + "_time", -1)
-        if (lastRequestTime.equals(-1) || (lastRequestTime > 0 && (System.currentTimeMillis() - lastRequestTime) > DateUtils.DAY_IN_MILLIS)) {
+        if (lastRequestTime.equals(-1) ||
+            (lastRequestTime > 0 && (System.currentTimeMillis() - lastRequestTime) > DateUtils.DAY_IN_MILLIS)) {
 
             holder.progressView.visibility = View.VISIBLE
             holder.contentView.visibility = View.GONE
 
-            val lat = place?.lat
-            val lon = place?.lon
+            val lat = item?.lat
+            val lon = item?.lon
 
             val provider = activity as ActivityLifecycleProvider
 
             val query = "$lat,$lon"
             api.getForecast(query, Const.FORECAST_FOR_DAYS)
-                .compose(schedulersManager!!.applySchedulers<Any>(provider))
-                .subscribe {
-                forecast -> {
-                    prefs!!.edit().putLong(hash + "_time", System.currentTimeMillis()).apply()
-                    prefs!!.edit().putString(hash, gson.toJson(forecast)).apply()
-                    notifyDataSetChanged()
-                }
-            }
+                    .compose(schedulersManager!!.applySchedulers<Any>(provider))
+                    .subscribe({ forecast -> run {
+                        val now = System.currentTimeMillis()
+                        prefs!!.edit().putLong(hash + "_time", now).apply()
+                        prefs!!.edit().putString(hash, gson.toJson(forecast)).apply()
+                        notifyDataSetChanged()
+                    } })
         } else {
             holder.progressView.visibility = View.GONE
             holder.contentView.visibility = View.VISIBLE
 
-            var f = cache.get(place?.id)
+            var f = cache.get(item?.id)
             if (f == null) {
                 // forecast exists - load it from cache
                 val rawForecast = prefs!!.getString(hash, null)
                 f = gson.fromJson(rawForecast, Forecast::class.java)
-                cache.put(place?.id, f)
+                cache.put(item?.id, f)
             }
 
             val conditions = f!!.data?.currentCondition
-            if (conditions != null && conditions!!.size() > 0) {
-                val condition = conditions!!.get(0)
+            if (conditions != null && conditions.size() > 0) {
+                val condition = conditions.get(0)
 
-                holder.humidityView.setText(condition.humidity + "%")
+                holder.humidityView.text = condition.humidity + "%"
 
                 try {
                     val pressure = Integer.valueOf(condition.pressure)!!
 
                     if (metrics!!.useMmhg()) {
                         holder.pressureView.text = context.getString(R.string.fmt_pressure_mmhg,
-                                (pressure * Const.CONVERT_MMHG).toInt())
+                                                                     (pressure * Const.CONVERT_MMHG).toInt())
                     } else {
-                        holder.pressureView.text = context.getString(R.string.fmt_pressure_kpa, pressure)
+                        holder.pressureView.text = context.getString(R.string.fmt_pressure_kpa,
+                                                                     pressure)
                     }
                 } catch (e: NumberFormatException) {
                     holder.pressureView.setText(R.string.undef)
@@ -152,9 +154,11 @@ public class PlacesAdapter
                 val sb = StringBuilder()
                 sb.append(condition.winddir16Point).append(", ")
                 if (metrics!!.useKmph()) {
-                    sb.append(context.getString(R.string.fmt_windspeed_kmph, condition.windspeedKmph))
+                    sb.append(
+                            context.getString(R.string.fmt_windspeed_kmph, condition.windspeedKmph))
                 } else {
-                    sb.append(context.getString(R.string.fmt_windspeed_mph, condition.windspeedMiles))
+                    sb.append(
+                            context.getString(R.string.fmt_windspeed_mph, condition.windspeedMiles))
                 }
 
                 holder.windView.text = sb.toString()
@@ -162,25 +166,27 @@ public class PlacesAdapter
                 val descList = condition.weatherDesc
                 if (descList != null && descList.size() > 0) {
                     val description = descList.get(0).value
-                    holder.weatherDescView.setText(description)
+                    holder.weatherDescView.text = description
                 }
 
                 if (metrics!!.useCelsius()) {
-                    holder.temperatureView.setText(condition.tempC)
+                    holder.temperatureView.text = condition.tempC
                 } else {
-                    holder.temperatureView.setText(condition.tempF)
+                    holder.temperatureView.text = condition.tempF
                 }
 
                 val urls = conditions.get(0).weatherIconUrl
 
                 if (urls != null && urls.size() > 0) {
                     val url = urls.get(0).value
-                    Picasso.with(activity).load(if (!TextUtils.isEmpty(url)) url else null).transform(transformation).into(holder.weatherState)
+                    Picasso.with(activity).load(
+                            if (!TextUtils.isEmpty(url)) url else null).transform(
+                            transformation).into(holder.weatherState)
                 }
             }
 
             holder.weatherFor5DaysView.setWeatherForWeek(f.data!!.weather, metrics!!.useCelsius(),
-                    transformation)
+                                                         transformation)
         }
     }
 

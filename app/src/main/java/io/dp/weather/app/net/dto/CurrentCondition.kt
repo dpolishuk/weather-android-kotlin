@@ -1,14 +1,11 @@
 package io.dp.weather.app.net.dto
 
-import java.util.ArrayList
-
-import com.google.gson.annotations.Expose
-import com.google.gson.annotations.SerializedName
-
 import android.os.Parcel
 import android.os.Parcelable
-
+import com.google.gson.annotations.Expose
+import com.google.gson.annotations.SerializedName
 import io.dp.weather.app.WeatherIconUrl
+import java.util.*
 
 public data class CurrentCondition() : Parcelable {
 
@@ -46,63 +43,63 @@ public data class CurrentCondition() : Parcelable {
     @Expose
     public var windspeedMiles: String? = null
 
-    override fun equals(o: Any?): Boolean {
-        if (this === o) {
+    override fun equals(other: Any?): Boolean {
+        if (this === other) {
             return true
         }
-        if (o !is CurrentCondition) {
+        if (other !is CurrentCondition) {
             return false
         }
 
-        if (if (cloudcover != null) cloudcover != o.cloudcover else o.cloudcover != null) {
+        if (if (cloudcover != null) cloudcover != other.cloudcover else other.cloudcover != null) {
             return false
         }
-        if (if (humidity != null) humidity != o.humidity else o.humidity != null) {
+        if (if (humidity != null) humidity != other.humidity else other.humidity != null) {
             return false
         }
-        if (if (observationTime != null) observationTime != o.observationTime
-        else o.observationTime != null) {
+        if (if (observationTime != null) observationTime != other.observationTime
+        else other.observationTime != null) {
             return false
         }
-        if (if (precipMM != null) precipMM != o.precipMM else o.precipMM != null) {
+        if (if (precipMM != null) precipMM != other.precipMM else other.precipMM != null) {
             return false
         }
-        if (if (pressure != null) pressure != o.pressure else o.pressure != null) {
+        if (if (pressure != null) pressure != other.pressure else other.pressure != null) {
             return false
         }
-        if (if (tempC != null) tempC != o.tempC else o.tempC != null) {
+        if (if (tempC != null) tempC != other.tempC else other.tempC != null) {
             return false
         }
-        if (if (tempF != null) tempF != o.tempF else o.tempF != null) {
+        if (if (tempF != null) tempF != other.tempF else other.tempF != null) {
             return false
         }
-        if (if (visibility != null) visibility != o.visibility else o.visibility != null) {
+        if (if (visibility != null) visibility != other.visibility else other.visibility != null) {
             return false
         }
-        if (if (weatherCode != null) weatherCode != o.weatherCode else o.weatherCode != null) {
+        if (if (weatherCode != null) weatherCode != other.weatherCode else other.weatherCode != null) {
             return false
         }
-        if (if (weatherDesc != null) weatherDesc != o.weatherDesc else o.weatherDesc != null) {
+        if (if (weatherDesc != null) weatherDesc != other.weatherDesc else other.weatherDesc != null) {
             return false
         }
-        if (if (weatherIconUrl != null) weatherIconUrl != o.weatherIconUrl
-        else o.weatherIconUrl != null) {
+        if (if (weatherIconUrl != null) weatherIconUrl != other.weatherIconUrl
+        else other.weatherIconUrl != null) {
             return false
         }
-        if (if (winddir16Point != null) winddir16Point != o.winddir16Point
-        else o.winddir16Point != null) {
+        if (if (winddir16Point != null) winddir16Point != other.winddir16Point
+        else other.winddir16Point != null) {
             return false
         }
-        if (if (winddirDegree != null) winddirDegree != o.winddirDegree
-        else o.winddirDegree != null) {
+        if (if (winddirDegree != null) winddirDegree != other.winddirDegree
+        else other.winddirDegree != null) {
             return false
         }
-        if (if (windspeedKmph != null) windspeedKmph != o.windspeedKmph
-        else o.windspeedKmph != null) {
+        if (if (windspeedKmph != null) windspeedKmph != other.windspeedKmph
+        else other.windspeedKmph != null) {
             return false
         }
-        if (if (windspeedMiles != null) windspeedMiles != o.windspeedMiles
-        else o.windspeedMiles != null) {
+        if (if (windspeedMiles != null) windspeedMiles != other.windspeedMiles
+        else other.windspeedMiles != null) {
             return false
         }
 
@@ -165,9 +162,9 @@ public data class CurrentCondition() : Parcelable {
         this.visibility = `in`.readString()
         this.weatherCode = `in`.readString()
         this.weatherDesc = ArrayList<WeatherDesc>()
-//        `in`.readList(this.weatherDesc, ArrayList<Any>::class.java!!.getClassLoader())
+        `in`.readList(this.weatherDesc, javaClass<ArrayList<WeatherDesc>>().classLoader)
         this.weatherIconUrl = ArrayList<WeatherIconUrl>()
-//        `in`.readList(this.weatherIconUrl, ArrayList<WeatherIconUrl>::class.java!!.getClassLoader())
+        `in`.readList(this.weatherIconUrl, javaClass<ArrayList<WeatherIconUrl>>().classLoader)
         this.winddir16Point = `in`.readString()
         this.winddirDegree = `in`.readString()
         this.windspeedKmph = `in`.readString()

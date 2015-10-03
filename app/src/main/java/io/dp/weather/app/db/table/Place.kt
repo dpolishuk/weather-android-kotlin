@@ -32,24 +32,24 @@ public class Place {
         this.lon = lon
     }
 
-    override fun equals(o: Any?): Boolean {
-        if (this === o) {
+    override fun equals(other: Any?): Boolean {
+        if (this === other) {
             return true
         }
-        if (o !is Place) {
+        if (other !is Place) {
             return false
         }
 
-        if (id != o.id) {
+        if (id != other.id) {
             return false
         }
-        if (if (lat != null) lat != o.lat else o.lat != null) {
+        if (if (lat != null) lat != other.lat else other.lat != null) {
             return false
         }
-        if (if (lon != null) lon != o.lon else o.lon != null) {
+        if (if (lon != null) lon != other.lon else other.lon != null) {
             return false
         }
-        if (if (name != null) name != o.name else o.name != null) {
+        if (if (name != null) name != other.name else other.name != null) {
             return false
         }
 
@@ -69,10 +69,9 @@ public class Place {
     }
 
     companion object {
-
-        public val ID: String = "id"
-        public val NAME: String = "name"
-        private val LAT = "lat"
-        private val LON = "lon"
+        const public val ID = "id"
+        const public val NAME = "name"
+        const public val LAT = "lat"
+        const public val LON = "lon"
     }
 }

@@ -1,29 +1,29 @@
 package io.dp.weather.app.net.dto
 
-import com.google.gson.annotations.Expose
-
 import android.os.Parcel
 import android.os.Parcelable
+import com.google.gson.annotations.SerializedName
 
 public class Request : Parcelable {
 
-    @Expose
+    @SerializedName("query")
     public var query: String? = null
-    @Expose
+
+    @SerializedName("type")
     public var type: String? = null
 
-    override fun equals(o: Any?): Boolean {
-        if (this === o) {
+    override fun equals(other: Any?): Boolean {
+        if (this === other) {
             return true
         }
-        if (o !is Request) {
+        if (other !is Request) {
             return false
         }
 
-        if (if (query != null) query != o.query else o.query != null) {
+        if (if (query != null) query != other.query else other.query != null) {
             return false
         }
-        if (if (type != null) type != o.type else o.type != null) {
+        if (if (type != null) type != other.type else other.type != null) {
             return false
         }
 
