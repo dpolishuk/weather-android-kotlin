@@ -24,6 +24,6 @@ public open class BaseActivity : RxAppCompatActivity(), HasComponent<BaseActivit
         val app = getApplication() as WeatherApp
         val component = DaggerActivityComponent.builder().appComponent(app.component).activityModule(ActivityModule(this)).build()
 
-        return component.plus(BusModule())
+        return component.plusSubComponent(BusModule())
     }
 }

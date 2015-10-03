@@ -4,6 +4,8 @@ import dagger.Component
 import io.dp.weather.app.AppComponent
 import io.dp.weather.app.BusModule
 import io.dp.weather.app.BusSubcomponent
+import io.dp.weather.app.activity.debug.DebugBusModule
+import io.dp.weather.app.activity.debug.DebugBusSubcomponent
 import io.dp.weather.app.annotation.PerActivity
 
 /**
@@ -13,7 +15,7 @@ import io.dp.weather.app.annotation.PerActivity
 @Component(modules = arrayOf(ActivityModule::class), dependencies = arrayOf(AppComponent::class))
 public interface ActivityComponent : BaseActivityComponent {
 
-    public fun plus(module: BusModule): BusSubcomponent
+    public fun plusSubComponent(module: BusModule): BusSubcomponent
 
-//    public fun plus(module: DebugBusModule): DebugBusSubcomponent
+    public fun plusDebugSubComponent(module: DebugBusModule): DebugBusSubcomponent
 }

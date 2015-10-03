@@ -22,6 +22,7 @@ import io.dp.weather.app.BusSubcomponent
 import io.dp.weather.app.R
 import io.dp.weather.app.SchedulersManager
 import io.dp.weather.app.activity.SettingsActivity
+import io.dp.weather.app.activity.debug.DebugActivity
 import io.dp.weather.app.adapter.PlacesAdapter
 import io.dp.weather.app.adapter.PlacesAutoCompleteAdapter
 import io.dp.weather.app.db.DatabaseHelper
@@ -124,10 +125,10 @@ public class WeatherFragment : BaseFragment(), LoaderManager.LoaderCallbacks<Cur
                 return true
             }
 
-//            R.id.action_debug -> {
-//                startActivity(Intent(activity, DebugActivity::class.java))
-//                return true
-//            }
+            R.id.action_debug -> {
+                startActivity(Intent(activity, DebugActivity::class.java))
+                return true
+            }
         }
         return super.onOptionsItemSelected(item)
     }
