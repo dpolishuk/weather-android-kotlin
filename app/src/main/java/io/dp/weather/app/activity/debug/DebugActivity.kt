@@ -20,7 +20,7 @@ public class DebugActivity : BaseActivity() {
                 .activityModule(ActivityModule(this))
                 .build()
 
-        return activityComponent.plusDebugSubComponent(DebugBusModule())
+        return activityComponent.plusSubComponent(DebugBusModule())
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {

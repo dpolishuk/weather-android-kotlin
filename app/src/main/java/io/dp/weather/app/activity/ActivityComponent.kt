@@ -17,5 +17,5 @@ public interface ActivityComponent : BaseActivityComponent {
 
     public fun plusSubComponent(module: BusModule): BusSubcomponent
 
-    public fun plusDebugSubComponent(module: DebugBusModule): DebugBusSubcomponent
+    public fun plusSubComponent(module: DebugBusModule): DebugBusSubcomponent
 }

@@ -15,7 +15,9 @@ public class DebugBusModule {
 
     @Provides
     @PerActivity
-    public fun provideBus(): Bus {
+    // in Kotlin we need to have different method name for overriden dependency
+    // the reason - dagger2 + kapt won't generate BusModule_Factory code
+    public fun provideDebugBus(): Bus {
         return AsyncBus(ThreadEnforcer.ANY, "debug")
     }
 
