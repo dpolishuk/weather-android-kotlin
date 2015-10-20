@@ -1,11 +1,9 @@
 package io.dp.weather.app.utils
 
 import android.content.SharedPreferences
-
-import javax.inject.Inject
-
 import io.dp.weather.app.Const
 import io.dp.weather.app.annotation.ConfigPrefs
+import javax.inject.Inject
 
 /**
  * Created by dp on 11/10/14.
@@ -13,16 +11,7 @@ import io.dp.weather.app.annotation.ConfigPrefs
 public class MetricsController
 @Inject
 constructor(@ConfigPrefs private val prefs: SharedPreferences) {
-
-    public fun useCelsius(): Boolean {
-        return prefs.getBoolean(Const.USE_CELCIUS, false)
-    }
-
-    public fun useKmph(): Boolean {
-        return prefs.getBoolean(Const.USE_KMPH, false)
-    }
-
-    public fun useMmhg(): Boolean {
-        return prefs.getBoolean(Const.USE_MMHG, false)
-    }
+  val useCelsius = prefs.getBoolean(Const.USE_CELCIUS, false)
+  val useKmph = prefs.getBoolean(Const.USE_KMPH, false)
+  val useMmhg = prefs.getBoolean(Const.USE_MMHG, false)
 }

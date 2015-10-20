@@ -16,12 +16,11 @@ public class SchedulersManager
 @Inject
 constructor(@IOSched private val ioScheduler: Scheduler, @UISched private val uiScheduler: Scheduler) {
 
-    public fun <T> applySchedulers(provider: ActivityLifecycleProvider): Observable.Transformer<T, T> {
-        return Observable.Transformer {
-            observable -> (observable as Observable)
-                .subscribeOn(ioScheduler)
-                .observeOn(uiScheduler)
-                .compose(provider.bindToLifecycle<T>())
-        }
-    }
+  public fun <T> applySchedulers(provider: ActivityLifecycleProvider): Observable.Transformer<T, T>
+      = Observable.Transformer { observable ->
+    (observable as Observable)
+        .subscribeOn(ioScheduler)
+        .observeOn(uiScheduler)
+        .compose(provider.bindToLifecycle<T>())
+  }
 }

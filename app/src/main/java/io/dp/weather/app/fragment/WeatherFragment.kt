@@ -48,8 +48,8 @@ public class WeatherFragment : BaseFragment(), LoaderManager.LoaderCallbacks<Cur
     @Inject lateinit var bus: Bus
     @Inject lateinit var placesAutoCompleteAdapter: PlacesAutoCompleteAdapter
     @Inject lateinit var schedulersManager: SchedulersManager
-    @InjectView(R.id.grid) lateinit var gridView: StaggeredGridView
 
+    @InjectView(R.id.grid) lateinit var gridView: StaggeredGridView
     @InjectView(R.id.swipe_layout) lateinit var swipeRefreshView: SwipeRefreshLayout
 
     override fun onCreateView(inflater: LayoutInflater?, container: ViewGroup?,

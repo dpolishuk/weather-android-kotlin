@@ -8,8 +8,8 @@ import rx.Observable
 /**
  * Created by dp on 08/10/14.
  */
-public interface WeatherApi {
+interface WeatherApi {
 
     @GET("/weather.ashx")
-    public fun getForecast(@Query("q") params: String, @Query("num_of_days") days: Int): Observable<Forecast>
+    fun getForecast(@Query("q") params: String, @Query("num_of_days") days: Int): Observable<Forecast>
 }

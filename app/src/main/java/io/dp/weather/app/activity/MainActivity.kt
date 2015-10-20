@@ -1,7 +1,6 @@
 package io.dp.weather.app.activity
 
 import android.os.Bundle
-
 import io.dp.weather.app.R
 
 public class MainActivity : BaseActivity() {

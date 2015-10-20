@@ -101,6 +101,8 @@ dependencies {
   compile 'com.trello:rxlifecycle:0.2.0'
   compile 'com.trello:rxlifecycle-components:0.2.0'
 
+  compile 'org.jetbrains.anko:anko-sdk15:0.7.1'
+  compile 'org.jetbrains.anko:anko-support-v4:0.7.1'
 
   kaptTest 'com.google.dagger:dagger-compiler:2.0.1'
   testCompile 'junit:junit:4.11'

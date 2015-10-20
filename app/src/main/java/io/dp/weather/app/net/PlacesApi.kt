@@ -7,8 +7,8 @@ import retrofit.http.Query
 /**
  * Created by dp on 10/10/14.
  */
-public interface PlacesApi {
+interface PlacesApi {
 
     @GET("/place/autocomplete/json")
-    public fun getAutocomplete(@Query("input") input: String): JsonObject
+    fun getAutocomplete(@Query("input") input: String): JsonObject
 }
