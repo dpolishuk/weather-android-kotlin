@@ -4,11 +4,10 @@ import android.support.v4.app.FragmentActivity
 import android.widget.ArrayAdapter
 import android.widget.Filter
 import android.widget.Filterable
-import com.google.gson.JsonArray
 import com.google.gson.JsonObject
 import io.dp.weather.app.R
 import io.dp.weather.app.net.PlacesApi
-import java.util.ArrayList
+import java.util.*
 import javax.inject.Inject
 
 /**
@@ -41,8 +40,9 @@ constructor(activity: FragmentActivity, private val placesApi: PlacesApi) : Arra
                     // Extract the Place descriptions from the results
                     resultList = ArrayList<String>(predsJsonArray.size())
                     for (i in 0..predsJsonArray.size() - 1) {
-                        resultList!!.add(
-                                (predsJsonArray.get(i) as JsonObject).get("description").getAsString())
+                        val o = predsJsonArray.get(i) as JsonObject
+                        val descr = o.get("description").getAsString()
+                        resultList!!.add(descr)
                     }
 
                     // Assign the data to the FilterResults
