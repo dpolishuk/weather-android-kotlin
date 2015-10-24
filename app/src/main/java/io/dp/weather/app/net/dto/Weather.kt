@@ -1,5 +1,6 @@
 package io.dp.weather.app.net.dto
 
+import com.google.gson.annotations.SerializedName
 import io.dp.weather.app.WeatherIconUrl
 
 data class Weather(@SerializedName("date") var date: String?,

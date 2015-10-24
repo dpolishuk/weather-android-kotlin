@@ -3,7 +3,7 @@ package io.dp.weather.app.utils
 import android.view.MenuItem
 import android.widget.PopupMenu
 
-inline operator fun PopupMenu.invoke(f: PopupMenu.() -> Unit) = f()
+operator fun PopupMenu.invoke(f: PopupMenu.() -> Unit) = f()
 
 fun android.widget.PopupMenu.onMenuItemClick(init: __PopupMenu_OnMenuItemClickListener.() -> Boolean) {
   val listener = __PopupMenu_OnMenuItemClickListener()

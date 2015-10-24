@@ -5,7 +5,6 @@ import android.content.SharedPreferences
 import android.database.Cursor
 import android.support.v4.app.FragmentActivity
 import android.support.v4.util.LruCache
-import android.text.TextUtils
 import android.text.format.DateUtils
 import android.view.LayoutInflater
 import android.view.View
@@ -30,11 +29,13 @@ import io.dp.weather.app.db.table.Place
 import io.dp.weather.app.event.DeletePlaceEvent
 import io.dp.weather.app.net.WeatherApi
 import io.dp.weather.app.net.dto.Forecast
+import io.dp.weather.app.net.dto.Weather
 import io.dp.weather.app.utils.MetricsController
 import io.dp.weather.app.utils.WhiteBorderCircleTransformation
-import io.dp.weather.app.utils.onMenuItemClick
 import io.dp.weather.app.widget.WeatherFor5DaysView
-import rx.lang.kotlin.subscriber
+import rx.Subscriber
+import rx.android.schedulers.AndroidSchedulers
+import rx.schedulers.Schedulers
 import javax.inject.Inject
 
 /**
@@ -54,6 +55,20 @@ public class PlacesAdapter
 
   private val transformation = WhiteBorderCircleTransformation()
 
+  //  inner class ForecastCacheSubscriber(private val hash: String) : Subscriber<Forecast>() {
+  //
+  //    override public fun onCompleted() {
+  //    }
+  //
+  //    override public fun onError(e: Throwable) {
+  //    }
+  //
+  //    override public fun onNext(forecast: Forecast) {
+  //      prefs!!.edit().putLong(hash + "_time", System.currentTimeMillis()).apply()
+  //      prefs!!.edit().putString(hash, gson.toJson(forecast)).apply()
+  //      notifyDataSetChanged()
+  //    }
+  //  }
 
   init {
     this.inflater = LayoutInflater.from(activity)
@@ -85,9 +100,9 @@ public class PlacesAdapter
 
   fun SharedPreferences.isNeedToUpdateWeather(hash: String): Boolean {
     val lastRequestTime = prefs!!.getLong(hash + "_time", -1)
-    return lastRequestTime.equals(-1)
-           || (lastRequestTime > 0
-               && (System.currentTimeMillis() - lastRequestTime) > DateUtils.DAY_IN_MILLIS)
+    return lastRequestTime == -1L
+        || (lastRequestTime > 0
+        && (System.currentTimeMillis() - lastRequestTime) > DateUtils.DAY_IN_MILLIS)
   }
 
   override fun bindView(itemView: View, context: Context, place: Place?) {
@@ -102,10 +117,10 @@ public class PlacesAdapter
 
     when {
       metrics!!.useCelsius -> holder.degreeTypeView.setText(R.string.celcius)
-      else                 -> holder.degreeTypeView.setText(R.string.fahrenheit)
+      else -> holder.degreeTypeView.setText(R.string.fahrenheit)
     }
 
-    if (prefs?.isNeedToUpdateWeather(hash) ?: false) {
+    if (prefs?.isNeedToUpdateWeather(hash) ?: true) {
 
       holder.progressView.visibility = View.VISIBLE
       holder.contentView.visibility = View.GONE
@@ -118,75 +133,88 @@ public class PlacesAdapter
       val query = "$lat,$lon"
 
       api.getForecast(query, Const.FORECAST_FOR_DAYS)
-          .compose(schedulersManager!!.applySchedulers<Any>(provider))
-          .subscribe(subscriber<Forecast>()
-                  .onNext {
-                    prefs!!.edit().putLong(hash + "_time", System.currentTimeMillis()).apply()
-                    prefs!!.edit().putString(hash, gson.toJson(it)).apply()
-                    notifyDataSetChanged()
-                  }
-                  .onError {
-                    error("Got error $it")
-                  })
+          .subscribeOn(Schedulers.io())
+          .observeOn(AndroidSchedulers.mainThread())
+          .subscribe(object: Subscriber<Forecast>() {
+
+            override fun onNext(forecast: Forecast?) {
+              prefs!!.edit().putLong(hash + "_time", System.currentTimeMillis()).apply()
+              prefs!!.edit().putString(hash, gson.toJson(forecast)).apply()
+              notifyDataSetChanged()
+            }
+
+            override fun onCompleted() {
+            }
+
+            override fun onError(e: Throwable?) {
+              error("Got error: $e")
+            }
+
+          })
     } else {
       holder.progressView.visibility = View.GONE
       holder.contentView.visibility = View.VISIBLE
 
-      var forecast = cache.get(place?.id)
-      if (forecast == null) {
+      val forecast = cache.get(place?.id)
+      if (forecast == null && place?.id != null) {
         // forecast exists - load it from cache
         val rawForecast = prefs!!.getString(hash, null)
-        forecast = gson.fromJson(rawForecast, Forecast::class.java)
-        cache.put(place?.id, forecast)
+        val f = gson.fromJson(rawForecast, Forecast::class.java)
+        if (f != null) {
+          cache.put(place?.id, f)
+        }
       }
 
-      val conditions = forecast!!.data?.currentCondition
-      if (conditions != null && conditions.size() > 0) {
-        val condition = conditions.get(0)
+      val conditions = forecast?.data?.currentCondition
+      if (conditions?.isNotEmpty() ?: false) {
+        val condition = conditions?.get(0)
 
-        holder.humidityView.setText("${condition.humidity} %")
+        holder.humidityView.setText("${condition?.humidity} %")
 
         try {
-          val pressure = Integer.valueOf(condition.pressure)!!
+          val pressure = Integer.valueOf(condition?.pressure)!!
 
           holder.pressureView.text = when {
             metrics!!.useMmhg -> context.getString(R.string.fmt_pressure_mmhg, (pressure * Const.CONVERT_MMHG).toInt())
-            else              -> context.getString(R.string.fmt_pressure_kpa, pressure)
+            else -> context.getString(R.string.fmt_pressure_kpa, pressure)
           }
         } catch (e: NumberFormatException) {
           holder.pressureView.setText(R.string.undef)
         }
 
         val metric = when {
-          metrics!!.useKmph -> context.getString(R.string.fmt_windspeed_kmph, condition.windspeedKmph)
-          else              -> context.getString(R.string.fmt_windspeed_mph, condition.windspeedMiles)
+          metrics!!.useKmph -> context.getString(R.string.fmt_windspeed_kmph, condition?.windspeedKmph ?: "")
+          else -> context.getString(R.string.fmt_windspeed_mph, condition?.windspeedMiles ?: "")
         }
 
-        holder.windView.text = "${condition.winddir16Point}, $metric"
+        holder.windView.text = "${condition?.winddir16Point}, $metric"
 
-        val descList = condition.weatherDesc
-        if (descList != null && descList.size() > 0) {
-          val description = descList.get(0).value
-          holder.weatherDescView.setText(description)
+        val descList = condition?.weatherDesc
+        if (descList?.isNotEmpty() ?: false) {
+          val description = descList?.get(0)?.value ?: ""
+          holder.weatherDescView.text = description
         }
 
         when {
-          metrics!!.useCelsius -> holder.temperatureView.setText(condition.tempC)
-          else                 -> holder.temperatureView.setText(condition.tempF)
+          metrics!!.useCelsius -> holder.temperatureView.text = condition?.tempC ?: ""
+          else -> holder.temperatureView.text = condition?.tempF ?: ""
         }
 
-        val urls = conditions.get(0).weatherIconUrl
+        val urls = conditions?.get(0)?.weatherIconUrl
 
-        if (urls != null && urls.size() > 0) {
-          val url = urls.get(0).value
+        if (urls?.isNotEmpty() ?: false) {
+          val url = urls?.get(0)?.value ?: ""
           Picasso.with(activity)
-              .load(if (!TextUtils.isEmpty(url)) url else null)
+              .load(url)
               .transform(transformation)
               .into(holder.weatherState)
         }
       }
 
-      holder.weatherFor5DaysView.setWeatherForWeek(forecast.data.weather!!, metrics!!.useCelsius, transformation)
+      val weather5days = forecast?.data?.weather ?: listOf<Weather>()
+      val isCelsius = metrics?.useCelsius ?: true
+
+      holder.weatherFor5DaysView.setWeatherForWeek(weather5days, isCelsius, transformation)
     }
   }
 

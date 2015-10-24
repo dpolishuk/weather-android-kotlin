@@ -8,17 +8,13 @@ import android.view.LayoutInflater
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
-
-import com.squareup.picasso.Picasso
-import com.squareup.picasso.Transformation
-
-import java.sql.Date
-
 import butterknife.ButterKnife
 import butterknife.InjectViews
+import com.squareup.picasso.Picasso
+import com.squareup.picasso.Transformation
 import io.dp.weather.app.R
-import io.dp.weather.app.WeatherIconUrl
 import io.dp.weather.app.net.dto.Weather
+import java.sql.Date
 
 /**
  * Created by dp on 08/10/14.
@@ -35,7 +31,7 @@ public class WeatherFor5DaysView : LinearLayout {
     @InjectViews(R.id.temp_1, R.id.temp_2, R.id.temp_3, R.id.temp_4, R.id.temp_5)
     lateinit var tempViews: Array<TextView>
 
-    lateinit var t: Transformation
+    lateinit var transformation: Transformation
 
     var celsius: String? = null
     var fahrenheit: String? = null
@@ -55,8 +51,8 @@ public class WeatherFor5DaysView : LinearLayout {
         fahrenheit = context.getString(R.string.fahrenheit)
     }
 
-    public fun setWeatherForWeek(weatherList: List<Weather>, useCelsius: Boolean, t: Transformation) {
-        this.t = t
+    public fun setWeatherForWeek(weatherList: List<Weather>, useCelsius: Boolean, transformation: Transformation) {
+        this.transformation = transformation
 
         for (i in weatherList.indices) {
             val v = dayViews[i]
@@ -71,8 +67,6 @@ public class WeatherFor5DaysView : LinearLayout {
             }
 
             if (useCelsius) {
-
-
                 tempViews[i].setText("${weather.tempMinC}-${weather.tempMaxC}${context!!.getString(R.string.celcius)}")
             } else {
                 tempViews[i].setText("${weather.tempMinF}-${weather.tempMaxF}${context!!.getString(R.string.fahrenheit)}")
@@ -82,7 +76,7 @@ public class WeatherFor5DaysView : LinearLayout {
             if (urls != null && urls.size() > 0) {
                 val url = urls.get(0)
                 if (!TextUtils.isEmpty(url.value)) {
-                    Picasso.with(getContext()).load(url.value).transform(t).into(v)
+                    Picasso.with(getContext()).load(url.value).transform(transformation).into(v)
                 }
             }
         }
