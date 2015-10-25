@@ -8,14 +8,11 @@ import io.dp.weather.app.activity.debug.DebugBusModule
 import io.dp.weather.app.activity.debug.DebugBusSubcomponent
 import io.dp.weather.app.annotation.PerActivity
 
-/**
- * Created by deepol on 19/08/15.
- */
 @PerActivity
 @Component(modules = arrayOf(ActivityModule::class), dependencies = arrayOf(AppComponent::class))
-public interface ActivityComponent : BaseActivityComponent {
+interface ActivityComponent : BaseActivityComponent {
 
-    public fun plusSubComponent(module: BusModule): BusSubcomponent
+    fun plusSubComponent(module: BusModule): BusSubcomponent
 
-    public fun plusSubComponent(module: DebugBusModule): DebugBusSubcomponent
+    fun plusSubComponent(module: DebugBusModule): DebugBusSubcomponent
 }

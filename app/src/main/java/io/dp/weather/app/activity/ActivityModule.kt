@@ -12,36 +12,32 @@ import io.dp.weather.app.annotation.ConfigPrefs
 import io.dp.weather.app.annotation.PerActivity
 import io.dp.weather.app.db.DatabaseHelper
 
-/**
- * Created by dp on 07/10/14.
- */
-
 @Module
-public class ActivityModule(private val activity: FragmentActivity) {
+class ActivityModule(private val activity: FragmentActivity) {
 
     @Provides
     @PerActivity
-    public fun provideActivity(): FragmentActivity {
+    fun provideActivity(): FragmentActivity {
         return activity
     }
 
     @Provides
     @PerActivity
-    public fun provideDatabaseHelper(): DatabaseHelper {
+    fun provideDatabaseHelper(): DatabaseHelper {
         return OpenHelperManager.getHelper(activity, DatabaseHelper::class.java)
     }
 
     @Provides
     @ConfigPrefs
     @PerActivity
-    public fun provideConfigPrefs(): SharedPreferences {
+    fun provideConfigPrefs(): SharedPreferences {
         return PreferenceManager.getDefaultSharedPreferences(activity)
     }
 
     @Provides
     @CachePrefs
     @PerActivity
-    public fun provideCachePrefs(): SharedPreferences {
+    fun provideCachePrefs(): SharedPreferences {
         return activity.getSharedPreferences("cachePrefs", Context.MODE_PRIVATE)
     }
 }

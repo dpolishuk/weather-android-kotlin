@@ -27,14 +27,10 @@ import io.dp.weather.app.net.dto.Forecast
 import io.dp.weather.app.net.dto.Weather
 import io.dp.weather.app.utils.MetricsController
 import io.dp.weather.app.utils.WhiteBorderCircleTransformation
-import io.dp.weather.app.utils.onMenuItemClick
 import io.dp.weather.app.widget.WeatherFor5DaysView
 import timber.log.Timber
 import javax.inject.Inject
 
-/**
- * Created by dp on 08/10/14.
- */
 @PerActivity
 class PlacesAdapter
 @Inject constructor(private val activity: FragmentActivity,
@@ -78,6 +74,21 @@ class PlacesAdapter
     return Holder(activity.layoutInflater.inflate(R.layout.item_city_weather, parent, false))
   }
 
+  fun getForecast(place: Place): Forecast? {
+    val hash = "${place.hashCode()}"
+    var forecast = cache.get(place.id)
+    if (forecast == null && place.id != null) {
+      // forecast exists - load it from cache
+      val rawForecast = prefs.getString(hash, null)
+      forecast = gson.fromJson(rawForecast, Forecast::class.java)
+      if (forecast != null) {
+        cache.put(place.id, forecast)
+      }
+    }
+
+    return forecast
+  }
+
   override fun onBindViewHolder(holder: Holder, place: Place) {
     val hash = "${place.hashCode()}"
     holder.cityName.text = place.name
@@ -105,16 +116,7 @@ class PlacesAdapter
                 notifyDataSetChanged()
               }, { e -> Timber.e("! Got error: $e") }, {})
     } else {
-      val forecast = cache.get(place.id)
-      if (forecast == null && place.id != null) {
-        // forecast exists - load it from cache
-        val rawForecast = prefs.getString(hash, null)
-        val f = gson.fromJson(rawForecast, Forecast::class.java)
-        if (f != null) {
-          cache.put(place.id, f)
-        }
-      }
-
+      var forecast = getForecast(place)
       val conditions = forecast?.data?.currentCondition
       if (conditions?.isNotEmpty() ?: false) {
         val condition = conditions?.get(0)
@@ -173,11 +175,9 @@ class PlacesAdapter
       val popupMenu = PopupMenu(activity, v)
       popupMenu.inflate(R.menu.item_place)
 
-      with (popupMenu) {
-        onMenuItemClick {
-          bus.post(DeletePlaceEvent(id))
-          true
-        }
+      popupMenu.setOnMenuItemClickListener {
+        bus.post(DeletePlaceEvent(id))
+        true
       }
 
       popupMenu.show()

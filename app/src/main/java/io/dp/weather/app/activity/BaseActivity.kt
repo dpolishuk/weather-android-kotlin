@@ -5,11 +5,8 @@ import com.trello.rxlifecycle.components.support.RxAppCompatActivity
 import io.dp.weather.app.BusModule
 import io.dp.weather.app.WeatherApp
 
-/**
- * Created by dp on 07/10/14.
- */
-public open class BaseActivity : RxAppCompatActivity(), HasComponent<BaseActivityComponent> {
-    private var component: BaseActivityComponent? = null
+open class BaseActivity : RxAppCompatActivity(), HasComponent<BaseActivityComponent> {
+    private lateinit var component: BaseActivityComponent
 
     override protected fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -17,7 +14,7 @@ public open class BaseActivity : RxAppCompatActivity(), HasComponent<BaseActivit
     }
 
     override fun getComponent(): BaseActivityComponent {
-        return component!!
+        return component
     }
 
     override fun createComponent(): BaseActivityComponent {

@@ -19,8 +19,7 @@ import io.dp.weather.app.R
  * for design guidelines and the [Settings
    * API Guide](http://developer.android.com/guide/topics/ui/settings.html) for more information on developing a Settings UI.
  */
-public class SettingsActivity : PreferenceActivity() {
-
+class SettingsActivity : PreferenceActivity() {
 
     override fun onPostCreate(savedInstanceState: Bundle?) {
         super.onPostCreate(savedInstanceState)

@@ -1,6 +1,5 @@
 package io.dp.weather.app.fragment
 
-import android.content.Context
 import android.content.Intent
 import android.database.Cursor
 import android.location.Geocoder
@@ -12,8 +11,7 @@ import android.support.v4.widget.SwipeRefreshLayout
 import android.support.v7.widget.RecyclerView
 import android.support.v7.widget.StaggeredGridLayoutManager
 import android.view.*
-import android.view.inputmethod.InputMethodManager
-import android.widget.AutoCompleteTextView
+import android.widget.AdapterView
 import butterknife.bindView
 import com.squareup.otto.Bus
 import com.squareup.otto.Subscribe
@@ -32,16 +30,14 @@ import io.dp.weather.app.event.AddPlaceEvent
 import io.dp.weather.app.event.DeletePlaceEvent
 import io.dp.weather.app.event.UpdateListEvent
 import io.dp.weather.app.utils.Observables
-import rx.Subscription
+import io.dp.weather.app.widget.ArrayAdapterSearchView
+import org.jetbrains.anko.support.v4.longToast
 import java.sql.SQLException
-import java.util.*
 import javax.inject.Inject
 
-public class WeatherFragment : BaseFragment(), LoaderManager.LoaderCallbacks<Cursor>, SwipeRefreshLayout.OnRefreshListener {
+class WeatherFragment : BaseFragment(), LoaderManager.LoaderCallbacks<Cursor>, SwipeRefreshLayout.OnRefreshListener {
 
-    var subscriptionList: MutableList<Subscription> = ArrayList()
-
-    @Inject lateinit var geocoder: Geocoder
+    @Inject lateinit var geoCoder: Geocoder
     @Inject lateinit var adapter: PlacesAdapter
     @Inject lateinit var dbHelper: DatabaseHelper
     @Inject lateinit var bus: Bus
@@ -68,8 +64,6 @@ public class WeatherFragment : BaseFragment(), LoaderManager.LoaderCallbacks<Cur
 
         (component as BusSubcomponent).inject(this)
 
-        retainInstance = true
-
         adapter.preparedQuery = Queries.prepareCityQuery(dbHelper)
         recyclerView.adapter = adapter
 
@@ -81,7 +75,6 @@ public class WeatherFragment : BaseFragment(), LoaderManager.LoaderCallbacks<Cur
     override fun onResume() {
         super.onResume()
         bus.register(this)
-
         adapter.notifyDataSetChanged()
     }
 
@@ -95,29 +88,29 @@ public class WeatherFragment : BaseFragment(), LoaderManager.LoaderCallbacks<Cur
 
         inflater!!.inflate(R.menu.main, menu)
 
-        val addItem = menu!!.findItem(R.id.action_add)
+        if (Geocoder.isPresent()) {
+            val addItem = menu!!.findItem(R.id.action_add)
 
-        val addView = addItem.actionView as AutoCompleteTextView
-        MenuItemCompat.setOnActionExpandListener(addItem, object : MenuItemCompat.OnActionExpandListener {
-            override fun onMenuItemActionExpand(item: MenuItem): Boolean {
-                addView.post {
-                    addView.requestFocus()
-                    val imm = activity.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
-                    imm.showSoftInput(addView, InputMethodManager.SHOW_IMPLICIT)
-                }
-                return true
-            }
+            val searchView = MenuItemCompat.getActionView(addItem) as ArrayAdapterSearchView;
+            searchView.setOnItemClickListener(AdapterView.OnItemClickListener { adapterView, view, pos, id ->
+                addItem.collapseActionView();
+                searchView.setText("");
+                bus.post(AddPlaceEvent(adapterView.getItemAtPosition(pos) as String));
+            });
 
-            override fun onMenuItemActionCollapse(item: MenuItem): Boolean {
-                return true
-            }
-        })
+            val params = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+            searchView.layoutParams = params;
+            searchView.setAdapter(placesAutoCompleteAdapter);
+        } else {
+            longToast("Geocoder is not present")
+        }
     }
 
     override fun onOptionsItemSelected(item: MenuItem?): Boolean {
-        val id = item!!.itemId
-        when (id) {
-            R.id.action_add -> return true
+        when (item!!.itemId) {
+            R.id.action_add -> {
+                Geocoder.isPresent()
+            }
 
             R.id.action_settings -> {
                 startActivity(Intent(activity, SettingsActivity::class.java))
@@ -132,14 +125,6 @@ public class WeatherFragment : BaseFragment(), LoaderManager.LoaderCallbacks<Cur
         return super.onOptionsItemSelected(item)
     }
 
-    override fun onDestroyView() {
-        super.onDestroyView()
-
-        for (s in subscriptionList) {
-            s.unsubscribe()
-        }
-    }
-
     override fun onCreateLoader(i: Int, bundle: Bundle?): Loader<Cursor>? {
         try {
             return OrmliteCursorLoader(activity, dbHelper.getPlaceDao(), adapter.preparedQuery)
@@ -150,13 +135,9 @@ public class WeatherFragment : BaseFragment(), LoaderManager.LoaderCallbacks<Cur
         return null
     }
 
-    override fun onLoadFinished(loader: Loader<Cursor>, cursor: Cursor) {
-        adapter.changeCursor(cursor)
-    }
+    override fun onLoadFinished(loader: Loader<Cursor>, cursor: Cursor) = adapter.changeCursor(cursor)
 
-    override fun onLoaderReset(loader: Loader<Cursor>) {
-        adapter.changeCursor(null)
-    }
+    override fun onLoaderReset(loader: Loader<Cursor>) = adapter.changeCursor(null)
 
     override fun onRefresh() {
         swipeRefreshView.isRefreshing = true
@@ -182,13 +163,11 @@ public class WeatherFragment : BaseFragment(), LoaderManager.LoaderCallbacks<Cur
     }
 
     @Subscribe public fun onAddPlace(event: AddPlaceEvent) {
-        val s = Observables.getGeoForPlace(activity, dbHelper, geocoder, event.lookupPlace)
+        Observables.getGeoForPlace(activity, dbHelper, geoCoder, event.lookupPlace)
                 .compose(schedulersManager.applySchedulers<Place>())
                 .subscribe({
                     bus.post(UpdateListEvent())
                 }, {})
-
-        subscriptionList.add(s)
     }
 
     companion object {

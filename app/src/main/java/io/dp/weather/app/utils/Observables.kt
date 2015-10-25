@@ -25,9 +25,10 @@ public object Observables {
 
         return observable<List<Address>>() { subscriber ->
             try {
-                Timber.v("Before ask geocoder")
                 synchronized (geocoder) {
-                    subscriber.onNext(geocoder.getFromLocationName(lookupPlace, 1))
+                    val addresses = geocoder.getFromLocationName(lookupPlace, 1)
+                    Timber.v("! got addresses: $addresses")
+                    subscriber.onNext(addresses)
                 }
             } catch (e: IOException) {
                 Toast.makeText(context, R.string.cannot_find_geo_for_specified_location,
@@ -37,12 +38,11 @@ public object Observables {
             } finally {
                 subscriber.onCompleted()
             }
-        }.flatMap { addresses ->
-            observable<Place>() { subscriber ->
-                if (addresses != null && addresses.size() > 0) {
-                    val address = addresses.get(0)
+        }.flatMap { addresses -> observable<Place>() { subscriber ->
+                if (addresses?.size ?: -1 > 0) {
+                    val address = addresses[0]
                     try {
-
+                        Timber.v("! Add place to database: $lookupPlace")
                         val place = Place(lookupPlace, address.latitude, address.longitude)
                         dbHelper.getPlaceDao()!!.createIfNotExists(place)
 
@@ -56,6 +56,8 @@ public object Observables {
                     } finally {
                         subscriber.onCompleted()
                     }
+                } else {
+                    Timber.v("! empty addresses: $addresses")
                 }
             }
         }

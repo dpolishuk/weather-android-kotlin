@@ -10,8 +10,7 @@ import io.dp.weather.app.activity.HasComponent
  */
 public abstract class BaseFragment : RxFragment() {
 
-    public var component: BaseActivityComponent? = null
-        private set
+    public lateinit var component: BaseActivityComponent
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
