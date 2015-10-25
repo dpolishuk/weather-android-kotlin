@@ -8,28 +8,18 @@ import android.view.LayoutInflater
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
-import butterknife.ButterKnife
-import butterknife.InjectViews
+import butterknife.bindViews
 import com.squareup.picasso.Picasso
 import com.squareup.picasso.Transformation
 import io.dp.weather.app.R
 import io.dp.weather.app.net.dto.Weather
 import java.sql.Date
 
-/**
- * Created by dp on 08/10/14.
- */
-
 public class WeatherFor5DaysView : LinearLayout {
 
-    @InjectViews(R.id.day_name_1, R.id.day_name_2, R.id.day_name_3, R.id.day_name_4, R.id.day_name_5)
-    lateinit var dayNameViews: Array<TextView>
-
-    @InjectViews(R.id.day_1, R.id.day_2, R.id.day_3, R.id.day_4, R.id.day_5)
-    lateinit var dayViews: Array<ImageView>
-
-    @InjectViews(R.id.temp_1, R.id.temp_2, R.id.temp_3, R.id.temp_4, R.id.temp_5)
-    lateinit var tempViews: Array<TextView>
+    val dayNameViews: List<TextView> by bindViews(R.id.day_name_1, R.id.day_name_2, R.id.day_name_3, R.id.day_name_4, R.id.day_name_5)
+    val dayViews: List<ImageView> by bindViews(R.id.day_1, R.id.day_2, R.id.day_3, R.id.day_4, R.id.day_5)
+    val tempViews: List<TextView> by bindViews(R.id.temp_1, R.id.temp_2, R.id.temp_3, R.id.temp_4, R.id.temp_5)
 
     lateinit var transformation: Transformation
 
@@ -56,35 +46,29 @@ public class WeatherFor5DaysView : LinearLayout {
 
         for (i in weatherList.indices) {
             val v = dayViews[i]
-            val weather = weatherList.get(i)
+            val weather = weatherList[i]
 
             try {
                 val date = Date.valueOf(weather.date)
-                val weekDay = DateUtils.formatDateTime(getContext(), date.time, DateUtils.FORMAT_SHOW_WEEKDAY or DateUtils.FORMAT_ABBREV_WEEKDAY)
+                val weekDay = DateUtils.formatDateTime(context, date.time, DateUtils.FORMAT_SHOW_WEEKDAY or DateUtils.FORMAT_ABBREV_WEEKDAY)
                 dayNameViews[i].text = weekDay
             } catch (e: IllegalArgumentException) {
                 dayNameViews[i].text = ""
             }
 
             if (useCelsius) {
-                tempViews[i].setText("${weather.tempMinC}-${weather.tempMaxC}${context!!.getString(R.string.celcius)}")
+                tempViews[i].text = "${weather.tempMinC}-${weather.tempMaxC}${context!!.getString(R.string.celcius)}"
             } else {
-                tempViews[i].setText("${weather.tempMinF}-${weather.tempMaxF}${context!!.getString(R.string.fahrenheit)}")
+                tempViews[i].text = "${weather.tempMinF}-${weather.tempMaxF}${context!!.getString(R.string.fahrenheit)}"
             }
 
             val urls = weather.weatherIconUrl
-            if (urls != null && urls.size() > 0) {
-                val url = urls.get(0)
-                if (!TextUtils.isEmpty(url.value)) {
-                    Picasso.with(getContext()).load(url.value).transform(transformation).into(v)
+            if (urls?.isNotEmpty() ?: false) {
+                val url = urls?.get(0)
+                if (!TextUtils.isEmpty(url?.value)) {
+                    Picasso.with(context).load(url?.value).transform(transformation).into(v)
                 }
             }
         }
     }
-
-    override fun onFinishInflate() {
-        super.onFinishInflate()
-        ButterKnife.inject(this)
-    }
-
 }

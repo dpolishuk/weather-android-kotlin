@@ -1,5 +1,6 @@
 package io.dp.weather.app
 
+import android.support.v4.app.FragmentActivity
 import com.trello.rxlifecycle.components.ActivityLifecycleProvider
 import io.dp.weather.app.annotation.IOSched
 import io.dp.weather.app.annotation.PerActivity
@@ -14,13 +15,15 @@ import javax.inject.Inject
 @PerActivity
 public class SchedulersManager
 @Inject
-constructor(@IOSched private val ioScheduler: Scheduler, @UISched private val uiScheduler: Scheduler) {
+constructor(private val activity: FragmentActivity,
+            @IOSched private val ioScheduler: Scheduler,
+            @UISched private val uiScheduler: Scheduler) {
 
-  public fun <T> applySchedulers(provider: ActivityLifecycleProvider): Observable.Transformer<T, T>
+  public fun <T> applySchedulers(): Observable.Transformer<T, T>
       = Observable.Transformer { observable ->
     (observable as Observable)
         .subscribeOn(ioScheduler)
         .observeOn(uiScheduler)
-        .compose(provider.bindToLifecycle<T>())
+        .compose((activity as ActivityLifecycleProvider).bindToLifecycle<T>())
   }
 }

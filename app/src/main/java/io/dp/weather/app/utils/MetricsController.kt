@@ -11,7 +11,12 @@ import javax.inject.Inject
 public class MetricsController
 @Inject
 constructor(@ConfigPrefs private val prefs: SharedPreferences) {
-  val useCelsius = prefs.getBoolean(Const.USE_CELCIUS, false)
-  val useKmph = prefs.getBoolean(Const.USE_KMPH, false)
-  val useMmhg = prefs.getBoolean(Const.USE_MMHG, false)
+    val useCelsius: Boolean
+        get() = prefs.getBoolean(Const.USE_CELCIUS, false)
+
+    val useKmph: Boolean
+        get() = prefs.getBoolean(Const.USE_KMPH, false)
+
+    val useMmhg: Boolean
+        get() = prefs.getBoolean(Const.USE_MMHG, false)
 }

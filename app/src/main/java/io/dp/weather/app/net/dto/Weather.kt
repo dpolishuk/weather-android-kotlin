@@ -2,7 +2,6 @@ package io.dp.weather.app.net.dto
 
 import com.google.gson.annotations.SerializedName
 import io.dp.weather.app.WeatherIconUrl
-import java.util.*
 
 data class Weather(@SerializedName("date") var date: String?,
                    @SerializedName("precipMM") var precipMM: String?,
@@ -11,8 +10,8 @@ data class Weather(@SerializedName("date") var date: String?,
                    @SerializedName("tempMinC") var tempMinC: String?,
                    @SerializedName("tempMinF") var tempMinF: String?,
                    @SerializedName("weatherCode") var weatherCode: String?,
-                   @SerializedName("weatherDesc") var weatherDesc: List<WeatherDesc>,
-                   @SerializedName("weatherIconUrl") var weatherIconUrl: List<WeatherIconUrl>,
+                   @SerializedName("weatherDesc") var weatherDesc: List<WeatherDesc>?,
+                   @SerializedName("weatherIconUrl") var weatherIconUrl: List<WeatherIconUrl>?,
                    @SerializedName("winddir16Point") var winddir16Point: String?,
                    @SerializedName("winddirDegree") var winddirDegree: String?,
                    @SerializedName("winddirection") var winddirection: String?,

@@ -9,15 +9,14 @@ import android.support.v4.app.LoaderManager
 import android.support.v4.content.Loader
 import android.support.v4.view.MenuItemCompat
 import android.support.v4.widget.SwipeRefreshLayout
+import android.support.v7.widget.RecyclerView
+import android.support.v7.widget.StaggeredGridLayoutManager
 import android.view.*
 import android.view.inputmethod.InputMethodManager
 import android.widget.AutoCompleteTextView
-import butterknife.ButterKnife
-import butterknife.InjectView
-import com.etsy.android.grid.StaggeredGridView
+import butterknife.bindView
 import com.squareup.otto.Bus
 import com.squareup.otto.Subscribe
-import com.trello.rxlifecycle.components.ActivityLifecycleProvider
 import io.dp.weather.app.BusSubcomponent
 import io.dp.weather.app.R
 import io.dp.weather.app.SchedulersManager
@@ -33,13 +32,12 @@ import io.dp.weather.app.event.AddPlaceEvent
 import io.dp.weather.app.event.DeletePlaceEvent
 import io.dp.weather.app.event.UpdateListEvent
 import io.dp.weather.app.utils.Observables
-import rx.Observer
 import rx.Subscription
 import java.sql.SQLException
 import java.util.*
 import javax.inject.Inject
 
-public class WeatherFragment : BaseFragment(), LoaderManager.LoaderCallbacks<Cursor>, SwipeRefreshLayout.OnRefreshListener, Observer<Place> {
+public class WeatherFragment : BaseFragment(), LoaderManager.LoaderCallbacks<Cursor>, SwipeRefreshLayout.OnRefreshListener {
 
     var subscriptionList: MutableList<Subscription> = ArrayList()
 
@@ -50,18 +48,19 @@ public class WeatherFragment : BaseFragment(), LoaderManager.LoaderCallbacks<Cur
     @Inject lateinit var placesAutoCompleteAdapter: PlacesAutoCompleteAdapter
     @Inject lateinit var schedulersManager: SchedulersManager
 
-    @InjectView(R.id.grid) lateinit var gridView: StaggeredGridView
-    @InjectView(R.id.swipe_layout) lateinit var swipeRefreshView: SwipeRefreshLayout
+    val recyclerView: RecyclerView by bindView(R.id.recycler)
+    val swipeRefreshView: SwipeRefreshLayout by bindView(R.id.swipe_layout)
 
     override fun onCreateView(inflater: LayoutInflater?, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
+        return inflater!!.inflate(R.layout.fragment_weather, container, false)
+    }
 
-        val v = inflater!!.inflate(R.layout.fragment_weather, container, false)
-        ButterKnife.inject(this, v)
+    override fun onViewCreated(view: View?, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
 
         swipeRefreshView.setOnRefreshListener(this)
-
-        return v
+        recyclerView.layoutManager = StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL)
     }
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
@@ -71,8 +70,8 @@ public class WeatherFragment : BaseFragment(), LoaderManager.LoaderCallbacks<Cur
 
         retainInstance = true
 
-        adapter.query = Queries.prepareCityQuery(dbHelper)
-        gridView.adapter = adapter
+        adapter.preparedQuery = Queries.prepareCityQuery(dbHelper)
+        recyclerView.adapter = adapter
 
         loaderManager.restartLoader(0, null, this)
 
@@ -143,7 +142,7 @@ public class WeatherFragment : BaseFragment(), LoaderManager.LoaderCallbacks<Cur
 
     override fun onCreateLoader(i: Int, bundle: Bundle?): Loader<Cursor>? {
         try {
-            return OrmliteCursorLoader(activity, dbHelper.getPlaceDao(), adapter.query)
+            return OrmliteCursorLoader(activity, dbHelper.getPlaceDao(), adapter.preparedQuery)
         } catch (e: SQLException) {
             e.printStackTrace()
         }
@@ -153,7 +152,6 @@ public class WeatherFragment : BaseFragment(), LoaderManager.LoaderCallbacks<Cur
 
     override fun onLoadFinished(loader: Loader<Cursor>, cursor: Cursor) {
         adapter.changeCursor(cursor)
-        gridView.post { gridView.setSelection(gridView.count - 1) }
     }
 
     override fun onLoaderReset(loader: Loader<Cursor>) {
@@ -184,21 +182,13 @@ public class WeatherFragment : BaseFragment(), LoaderManager.LoaderCallbacks<Cur
     }
 
     @Subscribe public fun onAddPlace(event: AddPlaceEvent) {
-        val s = Observables.getGeoForPlace(activity, dbHelper, geocoder, event.lookupPlace).compose(schedulersManager.applySchedulers<Place>(activity as ActivityLifecycleProvider)).subscribe(this@WeatherFragment)
+        val s = Observables.getGeoForPlace(activity, dbHelper, geocoder, event.lookupPlace)
+                .compose(schedulersManager.applySchedulers<Place>())
+                .subscribe({
+                    bus.post(UpdateListEvent())
+                }, {})
 
         subscriptionList.add(s)
-    }
-
-    override fun onCompleted() {
-
-    }
-
-    override fun onError(e: Throwable) {
-
-    }
-
-    override fun onNext(place: Place) {
-        bus.post(UpdateListEvent())
     }
 
     companion object {

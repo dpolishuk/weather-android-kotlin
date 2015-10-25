@@ -1,5 +1,5 @@
 buildscript {
-  ext.kotlin_version = '0.14.449'
+  ext.kotlin_version = '1.0.0-beta-1038'
   repositories {
     jcenter()
 
@@ -9,7 +9,7 @@ buildscript {
   }
 
   dependencies {
-    classpath 'com.android.tools.build:gradle:1.3.0'
+    classpath 'com.android.tools.build:gradle:1.3.1'
 
     classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
     classpath "org.jetbrains.kotlin:kotlin-android-extensions:$kotlin_version"
@@ -87,8 +87,6 @@ dependencies {
 
   compile 'com.google.dagger:dagger-producers:2.0-beta'
 
-  compile 'com.jakewharton:butterknife:6.1.0'
-  kapt 'com.jakewharton:butterknife:6.1.0'
   compile 'com.squareup.picasso:picasso:2.3.4'
 
   compile 'com.squareup:otto:1.3.6'
@@ -96,13 +94,15 @@ dependencies {
   compile 'com.etsy.android.grid:library:1.0.5'
   compile 'com.j256.ormlite:ormlite-android:4.48'
 
-  compile 'io.reactivex:rxkotlin:0.22.13'
+  compile 'io.reactivex:rxkotlin:0.24.100'
   compile 'io.reactivex:rxandroid:1.0.1'
-  compile 'com.trello:rxlifecycle:0.2.0'
-  compile 'com.trello:rxlifecycle-components:0.2.0'
+  compile 'com.trello:rxlifecycle:0.3.0'
+  compile 'com.trello:rxlifecycle-components:0.3.0'
 
-  compile 'org.jetbrains.anko:anko-sdk15:0.7.1'
-  compile 'org.jetbrains.anko:anko-support-v4:0.7.1'
+  compile 'com.jakewharton:kotterknife:0.1.0-SNAPSHOT'
+
+  compile 'org.jetbrains.anko:anko-sdk15:0.7.2'
+  compile 'org.jetbrains.anko:anko-support-v4:0.7.2'
 
   kaptTest 'com.google.dagger:dagger-compiler:2.0.1'
   testCompile 'junit:junit:4.11'
