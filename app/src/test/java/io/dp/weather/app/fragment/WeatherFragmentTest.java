@@ -88,13 +88,13 @@ import static org.mockito.Mockito.when;
     assertEquals(1, places.size());
     assertEquals(placeName, places.get(0).getName());
 
-    assertEquals(5, f.getAdapter().getCount());
+    assertEquals(5, f.getAdapter().getItemCount());
 
     f.onDeletePlace(new DeletePlaceEvent(1L));
-    f.getAdapter().notifyDataSetInvalidated();
+    f.getAdapter().notifyDataSetChanged();
 
     List<Place> placeList = databaseHelper.getPlaceDao().queryForAll();
     assertEquals(4, placeList.size());
-    assertEquals(4, f.getAdapter().getCount());
+    assertEquals(4, f.getAdapter().getItemCount());
   }
 }
