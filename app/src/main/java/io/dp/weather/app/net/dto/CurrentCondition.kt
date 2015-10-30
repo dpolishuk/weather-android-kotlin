@@ -2,7 +2,6 @@ package io.dp.weather.app.net.dto
 
 import com.google.gson.annotations.SerializedName
 import io.dp.weather.app.WeatherIconUrl
-import java.util.*
 
 public data class CurrentCondition(@SerializedName("cloudcover") var cloudcover: String?,
                                    @SerializedName("humidity") var humidity: String?,

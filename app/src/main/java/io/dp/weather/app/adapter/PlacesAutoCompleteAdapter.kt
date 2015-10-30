@@ -12,7 +12,7 @@ import javax.inject.Inject
 
 class PlacesAutoCompleteAdapter
 @Inject
-constructor(activity: FragmentActivity, private val placesApi: PlacesApi):
+constructor(activity: FragmentActivity, private val placesApi: PlacesApi) :
         ArrayAdapter<String>(activity, R.layout.item_search_list), Filterable {
 
     private var resultList: ArrayList<String>? = null

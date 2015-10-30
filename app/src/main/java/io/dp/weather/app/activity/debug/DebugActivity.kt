@@ -2,12 +2,13 @@ package io.dp.weather.app.activity.debug
 
 import android.os.Bundle
 import com.squareup.otto.Bus
-import io.dp.weather.app.R
 import io.dp.weather.app.WeatherApp
 import io.dp.weather.app.activity.ActivityModule
 import io.dp.weather.app.activity.BaseActivity
 import io.dp.weather.app.activity.BaseActivityComponent
 import io.dp.weather.app.activity.DaggerActivityComponent
+import org.jetbrains.anko.relativeLayout
+import org.jetbrains.anko.textView
 import javax.inject.Inject
 
 public class DebugActivity : BaseActivity() {
@@ -25,7 +26,12 @@ public class DebugActivity : BaseActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_debug)
+
+        relativeLayout {
+            textView("Hello, world!") {
+            }
+        }
+
         (getComponent() as DebugBusSubcomponent).inject(this)
     }
 }

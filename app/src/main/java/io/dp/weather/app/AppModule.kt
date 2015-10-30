@@ -10,12 +10,12 @@ import io.dp.weather.app.annotation.IOSched
 import io.dp.weather.app.annotation.UISched
 import io.dp.weather.app.net.PlacesApi
 import io.dp.weather.app.net.WeatherApi
-import javax.inject.Singleton
 import retrofit.RestAdapter
 import rx.Scheduler
 import rx.android.schedulers.AndroidSchedulers
 import rx.schedulers.Schedulers
 import timber.log.Timber
+import javax.inject.Singleton
 
 /**
  * Created by dp on 07/10/14.

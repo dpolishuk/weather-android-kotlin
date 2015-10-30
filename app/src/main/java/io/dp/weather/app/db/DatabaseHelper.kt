@@ -9,8 +9,8 @@ import com.j256.ormlite.table.TableUtils
 import io.dp.weather.app.BuildConfig
 import io.dp.weather.app.R
 import io.dp.weather.app.db.table.Place
-import java.sql.SQLException
 import timber.log.Timber
+import java.sql.SQLException
 
 /**
  * Created by dp on 09/10/14.
@@ -48,7 +48,7 @@ public class DatabaseHelper : OrmLiteSqliteOpenHelper {
     }
 
     override fun onUpgrade(database: SQLiteDatabase, connectionSource: ConnectionSource, oldVersion: Int,
-                         newVersion: Int) {
+                           newVersion: Int) {
         Timber.v("! onUpgradeDatabase")
     }
 

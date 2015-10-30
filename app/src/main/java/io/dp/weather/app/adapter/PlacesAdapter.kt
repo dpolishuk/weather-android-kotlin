@@ -28,174 +28,183 @@ import io.dp.weather.app.net.dto.Weather
 import io.dp.weather.app.utils.MetricsController
 import io.dp.weather.app.utils.WhiteBorderCircleTransformation
 import io.dp.weather.app.widget.WeatherFor5DaysView
+import rx.lang.kotlin.onError
 import timber.log.Timber
 import javax.inject.Inject
 
 @PerActivity
 class PlacesAdapter
-@Inject constructor(private val activity: FragmentActivity,
-                    private val gson: Gson,
-                    private val api: WeatherApi,
-                    private val bus: Bus) : OrmliteCursorRecyclerViewAdapter<Place, PlacesAdapter.Holder>(activity) {
+@Inject constructor(val activity: FragmentActivity,
+                    val gson: Gson,
+                    val api: WeatherApi,
+                    val bus: Bus) : OrmliteCursorRecyclerViewAdapter<Place, PlacesAdapter.Holder>(activity) {
 
-  private val cache = LruCache<Long, Forecast>(16)
+    private val cache = LruCache<Long, Forecast>(16)
 
-  private lateinit var schedulersManager: SchedulersManager
-  private lateinit var prefs: SharedPreferences
-  private lateinit var metrics: MetricsController
+    private lateinit var schedulersManager: SchedulersManager
+    private lateinit var prefs: SharedPreferences
+    private lateinit var metrics: MetricsController
 
-  private val transformation = WhiteBorderCircleTransformation()
+    private val transformation = WhiteBorderCircleTransformation()
 
-  @Inject public fun setMetricsController(metrics: MetricsController) {
-    this.metrics = metrics
-  }
-
-  @Inject public fun setSharedPreferences(@CachePrefs prefs: SharedPreferences) {
-    this.prefs = prefs
-  }
-
-  @Inject public fun setSchedulersManager(schedulersManager: SchedulersManager) {
-    this.schedulersManager = schedulersManager
-  }
-
-  public fun clear() {
-    this.cache.evictAll()
-    this.prefs.edit().clear().apply()
-  }
-
-  fun SharedPreferences.isNeedToUpdateWeather(hash: String): Boolean {
-    val lastRequestTime = prefs.getLong(hash + "_time", -1)
-    return lastRequestTime == -1L
-            || (lastRequestTime > 0
-            && (System.currentTimeMillis() - lastRequestTime) > DateUtils.DAY_IN_MILLIS)
-  }
-
-  override fun onCreateViewHolder(parent: ViewGroup?, viewType: Int): Holder? {
-    return Holder(activity.layoutInflater.inflate(R.layout.item_city_weather, parent, false))
-  }
-
-  fun getForecast(place: Place): Forecast? {
-    val hash = "${place.hashCode()}"
-    var forecast = cache.get(place.id)
-    if (forecast == null && place.id != null) {
-      // forecast exists - load it from cache
-      val rawForecast = prefs.getString(hash, null)
-      forecast = gson.fromJson(rawForecast, Forecast::class.java)
-      if (forecast != null) {
-        cache.put(place.id, forecast)
-      }
+    @Inject
+    fun setMetricsController(metrics: MetricsController) {
+        this.metrics = metrics
     }
 
-    return forecast
-  }
-
-  override fun onBindViewHolder(holder: Holder, place: Place) {
-    val hash = "${place.hashCode()}"
-    holder.cityName.text = place.name
-    holder.temperatureView.text = ""
-
-    holder.menuView.tag = place.id
-    holder.menuView.setOnClickListener(popupOnClickListener)
-
-    when {
-      metrics.useCelsius -> holder.degreeTypeView.setText(R.string.celcius)
-      else -> holder.degreeTypeView.setText(R.string.fahrenheit)
+    @Inject
+    fun setSharedPreferences(@CachePrefs prefs: SharedPreferences) {
+        this.prefs = prefs
     }
 
-    val isNeedToUpdate = prefs.isNeedToUpdateWeather(hash)
+    @Inject
+    fun setSchedulersManager(schedulersManager: SchedulersManager) {
+        this.schedulersManager = schedulersManager
+    }
 
-    holder.progressView.visibility = if (isNeedToUpdate) View.VISIBLE else View.GONE
-    holder.contentView.visibility = if (isNeedToUpdate) View.GONE else View.VISIBLE
+    public fun clear() {
+        this.cache.evictAll()
+        this.prefs.edit().clear().apply()
+    }
 
-    if (isNeedToUpdate) {
-      api.getForecast("${place.lat},${place.lon}", Const.FORECAST_FOR_DAYS)
-              .compose(schedulersManager.applySchedulers<Forecast>())
-              .subscribe({ forecast ->
-                prefs.edit().putLong(hash + "_time", System.currentTimeMillis()).apply()
-                prefs.edit().putString(hash, gson.toJson(forecast)).apply()
-                notifyDataSetChanged()
-              }, { e -> Timber.e("! Got error: $e") }, {})
-    } else {
-      var forecast = getForecast(place)
-      val conditions = forecast?.data?.currentCondition
-      if (conditions?.isNotEmpty() ?: false) {
-        val condition = conditions?.get(0)
+    fun SharedPreferences.isNeedToUpdateWeather(hash: String): Boolean {
+        val lastRequestTime = prefs.getLong(hash + "_time", -1)
+        return lastRequestTime == -1L
+                || (lastRequestTime > 0
+                && (System.currentTimeMillis() - lastRequestTime) > DateUtils.DAY_IN_MILLIS)
+    }
 
-        holder.humidityView.text = "${condition?.humidity} %"
+    override fun onCreateViewHolder(parent: ViewGroup?, viewType: Int): Holder? {
+        return Holder(activity.layoutInflater.inflate(R.layout.item_city_weather, parent, false))
+    }
 
-        try {
-          val pressure = Integer.valueOf(condition?.pressure)!!
-
-          holder.pressureView.text = when {
-            metrics.useMmhg -> activity.getString(R.string.fmt_pressure_mmhg, (pressure * Const.CONVERT_MMHG).toInt())
-            else -> activity.getString(R.string.fmt_pressure_kpa, pressure)
-          }
-        } catch (e: NumberFormatException) {
-          holder.pressureView.setText(R.string.undef)
+    fun getForecast(place: Place): Forecast? {
+        val hash = "${place.hashCode()}"
+        var forecast = cache.get(place.id)
+        if (forecast == null && place.id != null) {
+            // forecast exists - load it from cache
+            val rawForecast = prefs.getString(hash, null)
+            forecast = gson.fromJson(rawForecast, Forecast::class.java)
+            if (forecast != null) {
+                cache.put(place.id, forecast)
+            }
         }
 
-        val metric = when {
-          metrics.useKmph -> activity.getString(R.string.fmt_windspeed_kmph, condition?.windspeedKmph ?: "")
-          else -> activity.getString(R.string.fmt_windspeed_mph, condition?.windspeedMiles ?: "")
+        return forecast
+    }
+
+    fun fillViewWithForecast(holder: Holder, place: Place) {
+        var forecast = getForecast(place)
+        val conditions = forecast?.data?.currentCondition
+        if (conditions?.isNotEmpty() ?: false) {
+            val condition = conditions?.get(0)
+
+            holder.humidityView.text = "${condition?.humidity} %"
+
+            try {
+                val pressure = Integer.valueOf(condition?.pressure)!!
+
+                holder.pressureView.text = when {
+                    metrics.useMmhg -> activity.getString(R.string.fmt_pressure_mmhg, (pressure * Const.CONVERT_MMHG).toInt())
+                    else -> activity.getString(R.string.fmt_pressure_kpa, pressure)
+                }
+            } catch (e: NumberFormatException) {
+                holder.pressureView.setText(R.string.undef)
+            }
+
+            val metric = when {
+                metrics.useKmph -> activity.getString(R.string.fmt_windspeed_kmph, condition?.windspeedKmph ?: "")
+                else -> activity.getString(R.string.fmt_windspeed_mph, condition?.windspeedMiles ?: "")
+            }
+
+            holder.windView.text = "${condition?.winddir16Point}, $metric"
+
+            val descList = condition?.weatherDesc
+            if (descList?.isNotEmpty() ?: false) {
+                val description = descList?.get(0)?.value ?: ""
+                holder.weatherDescView.text = description
+            }
+
+            when {
+                metrics.useCelsius -> holder.temperatureView.text = condition?.tempC ?: ""
+                else -> holder.temperatureView.text = condition?.tempF ?: ""
+            }
+
+            val urls = conditions?.get(0)?.weatherIconUrl
+
+            if (urls?.isNotEmpty() ?: false) {
+                val url = urls?.get(0)?.value ?: ""
+                Picasso.with(activity)
+                        .load(url)
+                        .transform(transformation)
+                        .into(holder.weatherState)
+            }
         }
 
-        holder.windView.text = "${condition?.winddir16Point}, $metric"
+        val weather5days = forecast?.data?.weather ?: listOf<Weather>()
+        holder.weatherFor5DaysView.setWeatherForWeek(weather5days, metrics.useCelsius, transformation)
+    }
 
-        val descList = condition?.weatherDesc
-        if (descList?.isNotEmpty() ?: false) {
-          val description = descList?.get(0)?.value ?: ""
-          holder.weatherDescView.text = description
-        }
+    override fun onBindViewHolder(holder: Holder, place: Place) {
+        val hash = "${place.hashCode()}"
+        holder.cityName.text = place.name
+        holder.temperatureView.text = ""
+
+        holder.menuView.tag = place.id
+        holder.menuView.setOnClickListener(popupOnClickListener)
 
         when {
-          metrics.useCelsius -> holder.temperatureView.text = condition?.tempC ?: ""
-          else -> holder.temperatureView.text = condition?.tempF ?: ""
+            metrics.useCelsius -> holder.degreeTypeView.setText(R.string.celcius)
+            else -> holder.degreeTypeView.setText(R.string.fahrenheit)
         }
 
-        val urls = conditions?.get(0)?.weatherIconUrl
+        val isNeedToUpdate = prefs.isNeedToUpdateWeather(hash)
 
-        if (urls?.isNotEmpty() ?: false) {
-          val url = urls?.get(0)?.value ?: ""
-          Picasso.with(activity)
-                  .load(url)
-                  .transform(transformation)
-                  .into(holder.weatherState)
+        holder.progressView.visibility = if (isNeedToUpdate) View.VISIBLE else View.GONE
+        holder.contentView.visibility = if (isNeedToUpdate) View.GONE else View.VISIBLE
+
+        if (isNeedToUpdate) {
+            api.getForecast("${place.lat},${place.lon}", Const.FORECAST_FOR_DAYS)
+                    .compose(schedulersManager.applySchedulers<Forecast>())
+                    .onError { Timber.e("! Got error: $it") }
+                    .subscribe { forecast ->
+                        prefs.edit().putLong(hash + "_time", System.currentTimeMillis()).apply()
+                        prefs.edit().putString(hash, gson.toJson(forecast)).apply()
+                        notifyDataSetChanged()
+                    }
+        } else {
+            fillViewWithForecast(holder, place)
         }
-      }
-
-      val weather5days = forecast?.data?.weather ?: listOf<Weather>()
-      holder.weatherFor5DaysView.setWeatherForWeek(weather5days, metrics.useCelsius, transformation)
     }
-  }
 
-  val popupOnClickListener: View.OnClickListener = object : View.OnClickListener {
-    override fun onClick(v: View) {
-      val id = v.tag as Long
+    val popupOnClickListener: View.OnClickListener = object : View.OnClickListener {
+        override fun onClick(v: View) {
+            val id = v.tag as Long
 
-      val popupMenu = PopupMenu(activity, v)
-      popupMenu.inflate(R.menu.item_place)
+            val popupMenu = PopupMenu(activity, v)
+            popupMenu.inflate(R.menu.item_place)
 
-      popupMenu.setOnMenuItemClickListener {
-        bus.post(DeletePlaceEvent(id))
-        true
-      }
+            popupMenu.setOnMenuItemClickListener {
+                bus.post(DeletePlaceEvent(id))
+                true
+            }
 
-      popupMenu.show()
+            popupMenu.show()
+        }
     }
-  }
 
-  class Holder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-    val weatherState: ImageView by bindView(R.id.weather_state)
-    val cityName: TextView by bindView(R.id.city_name)
-    val weatherFor5DaysView: WeatherFor5DaysView by bindView(R.id.weather_for_week)
-    val temperatureView: TextView by bindView(R.id.temperature)
-    val degreeTypeView: TextView by bindView(R.id.degrees_type)
-    val weatherDescView: TextView by bindView(R.id.weather_description)
-    val progressView: ProgressBar by bindView(R.id.progress)
-    val contentView: View by bindView(R.id.content)
-    val menuView: View by bindView(R.id.menu)
-    val humidityView: TextView by bindView(R.id.humidity)
-    val pressureView: TextView by bindView(R.id.pressure)
-    val windView: TextView by bindView(R.id.wind)
-  }
+    class Holder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+        val weatherState: ImageView by bindView(R.id.weather_state)
+        val cityName: TextView by bindView(R.id.city_name)
+        val weatherFor5DaysView: WeatherFor5DaysView by bindView(R.id.weather_for_week)
+        val temperatureView: TextView by bindView(R.id.temperature)
+        val degreeTypeView: TextView by bindView(R.id.degrees_type)
+        val weatherDescView: TextView by bindView(R.id.weather_description)
+        val progressView: ProgressBar by bindView(R.id.progress)
+        val contentView: View by bindView(R.id.content)
+        val menuView: View by bindView(R.id.menu)
+        val humidityView: TextView by bindView(R.id.humidity)
+        val pressureView: TextView by bindView(R.id.pressure)
+        val windView: TextView by bindView(R.id.wind)
+    }
 }

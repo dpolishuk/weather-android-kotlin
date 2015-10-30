@@ -19,11 +19,11 @@ constructor(private val activity: FragmentActivity,
             @IOSched private val ioScheduler: Scheduler,
             @UISched private val uiScheduler: Scheduler) {
 
-  public fun <T> applySchedulers(): Observable.Transformer<T, T>
-      = Observable.Transformer { observable ->
-    (observable as Observable)
-        .subscribeOn(ioScheduler)
-        .observeOn(uiScheduler)
-        .compose((activity as ActivityLifecycleProvider).bindToLifecycle<T>())
-  }
+    public fun <T> applySchedulers(): Observable.Transformer<T, T>
+            = Observable.Transformer { observable ->
+        (observable as Observable)
+                .subscribeOn(ioScheduler)
+                .observeOn(uiScheduler)
+                .compose((activity as ActivityLifecycleProvider).bindToLifecycle<T>())
+    }
 }

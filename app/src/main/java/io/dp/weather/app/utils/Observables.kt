@@ -7,6 +7,7 @@ import android.widget.Toast
 import io.dp.weather.app.R
 import io.dp.weather.app.db.DatabaseHelper
 import io.dp.weather.app.db.table.Place
+import org.jetbrains.anko.toast
 import rx.Observable
 import rx.lang.kotlin.observable
 import timber.log.Timber
@@ -25,11 +26,9 @@ public object Observables {
 
         return observable<List<Address>>() { subscriber ->
             try {
-                synchronized (geocoder) {
-                    val addresses = geocoder.getFromLocationName(lookupPlace, 1)
-                    Timber.v("! got addresses: $addresses")
-                    subscriber.onNext(addresses)
-                }
+                val addresses = geocoder.getFromLocationName(lookupPlace, 1)
+                Timber.v("! got addresses: $addresses")
+                subscriber.onNext(addresses)
             } catch (e: IOException) {
                 Toast.makeText(context, R.string.cannot_find_geo_for_specified_location,
                         Toast.LENGTH_SHORT).show()
@@ -38,9 +37,10 @@ public object Observables {
             } finally {
                 subscriber.onCompleted()
             }
-        }.flatMap { addresses -> observable<Place>() { subscriber ->
+        }.flatMap { addresses ->
+            observable<Place>() { subscriber ->
                 if (addresses?.size ?: -1 > 0) {
-                    val address = addresses[0]
+                    val address = addresses.first()
                     try {
                         Timber.v("! Add place to database: $lookupPlace")
                         val place = Place(lookupPlace, address.latitude, address.longitude)
@@ -48,9 +48,8 @@ public object Observables {
 
                         subscriber.onNext(place)
                     } catch (e: SQLException) {
-                        Toast.makeText(context,
-                                R.string.something_went_wrong_with_adding_new_location,
-                                Toast.LENGTH_SHORT).show()
+
+                        context.toast(R.string.something_went_wrong_with_adding_new_location)
                         Timber.e(e, "Cannot add city $address lookupName: $lookupPlace lat ${address.latitude} lon ${address.longitude}")
                         subscriber.onError(e)
                     } finally {
