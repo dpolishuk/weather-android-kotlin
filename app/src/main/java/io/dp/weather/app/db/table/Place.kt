@@ -7,13 +7,13 @@ import com.j256.ormlite.table.DatabaseTable
 data class Place(@DatabaseField(generatedId = true, dataType = com.j256.ormlite.field.DataType.LONG, columnName = Place.ID)
                  public var id: Long?,
 
-                 @DatabaseField(dataType = DataType.STRING, columnName = Place.NAME)
+                 @DatabaseField(dataType = com.j256.ormlite.field.DataType.STRING, columnName = Place.NAME)
                  public var name: String?,
 
-                 @DatabaseField(dataType = DataType.DOUBLE_OBJ, columnName = Place.LAT)
+                 @DatabaseField(dataType = com.j256.ormlite.field.DataType.DOUBLE_OBJ, columnName = Place.LAT)
                  public var lat: Double?,
 
-                 @DatabaseField(dataType = DataType.DOUBLE_OBJ, columnName = Place.LON)
+                 @DatabaseField(dataType = com.j256.ormlite.field.DataType.DOUBLE_OBJ, columnName = Place.LON)
                  public var lon: Double?) {
 
     public constructor() : this(0, null, null, null)

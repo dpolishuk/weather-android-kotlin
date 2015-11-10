@@ -1,5 +1,6 @@
 package io.dp.weather.app.adapter
 
+import android.content.Context
 import android.content.SharedPreferences
 import android.support.v4.app.FragmentActivity
 import android.support.v4.util.LruCache
@@ -28,7 +29,6 @@ import io.dp.weather.app.net.dto.Weather
 import io.dp.weather.app.utils.MetricsController
 import io.dp.weather.app.utils.WhiteBorderCircleTransformation
 import io.dp.weather.app.widget.WeatherFor5DaysView
-import rx.lang.kotlin.onError
 import timber.log.Timber
 import javax.inject.Inject
 
@@ -93,87 +93,37 @@ class PlacesAdapter
         return forecast
     }
 
-    fun fillViewWithForecast(holder: Holder, place: Place) {
-        var forecast = getForecast(place)
-        val conditions = forecast?.data?.currentCondition
-        if (conditions?.isNotEmpty() ?: false) {
-            val condition = conditions?.get(0)
-
-            holder.humidityView.text = "${condition?.humidity} %"
-
-            try {
-                val pressure = Integer.valueOf(condition?.pressure)!!
-
-                holder.pressureView.text = when {
-                    metrics.useMmhg -> activity.getString(R.string.fmt_pressure_mmhg, (pressure * Const.CONVERT_MMHG).toInt())
-                    else -> activity.getString(R.string.fmt_pressure_kpa, pressure)
-                }
-            } catch (e: NumberFormatException) {
-                holder.pressureView.setText(R.string.undef)
-            }
-
-            val metric = when {
-                metrics.useKmph -> activity.getString(R.string.fmt_windspeed_kmph, condition?.windspeedKmph ?: "")
-                else -> activity.getString(R.string.fmt_windspeed_mph, condition?.windspeedMiles ?: "")
-            }
-
-            holder.windView.text = "${condition?.winddir16Point}, $metric"
-
-            val descList = condition?.weatherDesc
-            if (descList?.isNotEmpty() ?: false) {
-                val description = descList?.get(0)?.value ?: ""
-                holder.weatherDescView.text = description
-            }
-
-            when {
-                metrics.useCelsius -> holder.temperatureView.text = condition?.tempC ?: ""
-                else -> holder.temperatureView.text = condition?.tempF ?: ""
-            }
-
-            val urls = conditions?.get(0)?.weatherIconUrl
-
-            if (urls?.isNotEmpty() ?: false) {
-                val url = urls?.get(0)?.value ?: ""
-                Picasso.with(activity)
-                        .load(url)
-                        .transform(transformation)
-                        .into(holder.weatherState)
-            }
-        }
-
-        val weather5days = forecast?.data?.weather ?: listOf<Weather>()
-        holder.weatherFor5DaysView.setWeatherForWeek(weather5days, metrics.useCelsius, transformation)
-    }
-
     override fun onBindViewHolder(holder: Holder, place: Place) {
         val hash = "${place.hashCode()}"
-        holder.cityName.text = place.name
-        holder.temperatureView.text = ""
-
-        holder.menuView.tag = place.id
-        holder.menuView.setOnClickListener(popupOnClickListener)
-
-        when {
-            metrics.useCelsius -> holder.degreeTypeView.setText(R.string.celcius)
-            else -> holder.degreeTypeView.setText(R.string.fahrenheit)
-        }
 
         val isNeedToUpdate = prefs.isNeedToUpdateWeather(hash)
 
-        holder.progressView.visibility = if (isNeedToUpdate) View.VISIBLE else View.GONE
-        holder.contentView.visibility = if (isNeedToUpdate) View.GONE else View.VISIBLE
+        with (holder) {
+            cityName.text = place.name
+            temperatureView.text = ""
+
+            menuView.tag = place.id
+            menuView.setOnClickListener(popupOnClickListener)
+
+            when {
+                metrics.useCelsius -> degreeTypeView.setText(R.string.celcius)
+                else -> degreeTypeView.setText(R.string.fahrenheit)
+            }
+            progressView.visibility = if (isNeedToUpdate) View.VISIBLE else View.GONE
+            contentView.visibility = if (isNeedToUpdate) View.GONE else View.VISIBLE
+        }
 
         if (isNeedToUpdate) {
             api.getForecast("${place.lat},${place.lon}", Const.FORECAST_FOR_DAYS)
                     .compose(schedulersManager.applySchedulers<Forecast>())
-                    .onError { Timber.e("! Got error: $it") }
-                    .subscribe { forecast ->
+                    .subscribe({ forecast ->
                         prefs.edit().putLong(hash + "_time", System.currentTimeMillis()).apply()
                         prefs.edit().putString(hash, gson.toJson(forecast)).apply()
                         notifyDataSetChanged()
-                    }
+                    }, { throwable -> Timber.e(throwable, "Got throwable") })
         } else {
-            fillViewWithForecast(holder, place)
+            val forecast = getForecast(place) ?: Forecast(null)
+            holder.fillViewWithForecast(activity, forecast, metrics, transformation)
         }
     }
 
@@ -182,14 +132,18 @@ class PlacesAdapter
             val id = v.tag as Long
 
             val popupMenu = PopupMenu(activity, v)
-            popupMenu.inflate(R.menu.item_place)
 
-            popupMenu.setOnMenuItemClickListener {
-                bus.post(DeletePlaceEvent(id))
-                true
+            with (popupMenu) {
+                inflate(R.menu.item_place)
+
+                setOnMenuItemClickListener {
+                    bus.post(DeletePlaceEvent(id))
+                    true
+                }
+
+                show()
             }
 
-            popupMenu.show()
         }
     }
 
@@ -206,5 +160,56 @@ class PlacesAdapter
         val humidityView: TextView by bindView(R.id.humidity)
         val pressureView: TextView by bindView(R.id.pressure)
         val windView: TextView by bindView(R.id.wind)
+
+        fun fillViewWithForecast(context: Context, forecast: Forecast, metrics: MetricsController, transformation: WhiteBorderCircleTransformation) {
+            val conditions = forecast.data?.currentCondition
+            if (conditions?.isNotEmpty() ?: false) {
+                val condition = conditions?.get(0)
+
+                humidityView.text = "${condition?.humidity} %"
+
+                try {
+                    val pressure = Integer.valueOf(condition?.pressure)!!
+
+                    pressureView.text = when {
+                        metrics.useMmhg -> context.getString(R.string.fmt_pressure_mmhg, (pressure * Const.CONVERT_MMHG).toInt())
+                        else -> context.getString(R.string.fmt_pressure_kpa, pressure)
+                    }
+                } catch (e: NumberFormatException) {
+                    pressureView.setText(R.string.undef)
+                }
+
+                val metric = when {
+                    metrics.useKmph -> context.getString(R.string.fmt_windspeed_kmph, condition?.windspeedKmph ?: "")
+                    else -> context.getString(R.string.fmt_windspeed_mph, condition?.windspeedMiles ?: "")
+                }
+
+                windView.text = "${condition?.winddir16Point}, $metric"
+
+                val descList = condition?.weatherDesc
+                if (descList?.isNotEmpty() ?: false) {
+                    val description = descList?.get(0)?.value ?: ""
+                    weatherDescView.text = description
+                }
+
+                when {
+                    metrics.useCelsius -> temperatureView.text = condition?.tempC ?: ""
+                    else -> temperatureView.text = condition?.tempF ?: ""
+                }
+
+                val urls = conditions?.get(0)?.weatherIconUrl
+
+                if (urls?.isNotEmpty() ?: false) {
+                    val url = urls?.get(0)?.value ?: ""
+                    Picasso.with(context)
+                            .load(url)
+                            .transform(transformation)
+                            .into(weatherState)
+                }
+            }
+
+            val weather5days = forecast.data?.weather ?: listOf<Weather>()
+            weatherFor5DaysView.setWeatherForWeek(weather5days, metrics.useCelsius, transformation)
+        }
     }
 }
