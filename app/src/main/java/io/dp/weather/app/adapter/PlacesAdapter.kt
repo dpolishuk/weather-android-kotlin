@@ -120,9 +120,11 @@ class PlacesAdapter
                         prefs.edit().putLong(hash + "_time", System.currentTimeMillis()).apply()
                         prefs.edit().putString(hash, gson.toJson(forecast)).apply()
                         notifyDataSetChanged()
-                    }, { throwable -> Timber.e(throwable, "Got throwable") })
+                    }, { throwable ->
+                        Timber.e(throwable, "Got throwable")
+                    })
         } else {
-            val forecast = getForecast(place) ?: Forecast(null)
+            val forecast = getForecast(place) ?: Forecast()
             holder.fillViewWithForecast(activity, forecast, metrics, transformation)
         }
     }

@@ -5,20 +5,18 @@ import com.j256.ormlite.table.DatabaseTable
 
 @DatabaseTable(tableName = "places")
 data class Place(@DatabaseField(generatedId = true, dataType = com.j256.ormlite.field.DataType.LONG, columnName = Place.ID)
-                 public var id: Long?,
+                 public var id: Long? = 0,
 
                  @DatabaseField(dataType = com.j256.ormlite.field.DataType.STRING, columnName = Place.NAME)
-                 public var name: String?,
+                 public var name: String? = null,
 
                  @DatabaseField(dataType = com.j256.ormlite.field.DataType.DOUBLE_OBJ, columnName = Place.LAT)
-                 public var lat: Double?,
+                 public var lat: Double? = null,
 
                  @DatabaseField(dataType = com.j256.ormlite.field.DataType.DOUBLE_OBJ, columnName = Place.LON)
-                 public var lon: Double?) {
+                 public var lon: Double? = null) {
 
-    public constructor() : this(0, null, null, null)
-
-    public constructor(name: String, lat: Double, lon: Double) : this(0, name, lat, lon) {
+    public constructor(name: String, lat: Double, lon: Double) : this() {
         this.name = name
         this.lat = lat
         this.lon = lon

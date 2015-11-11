@@ -48,7 +48,6 @@ public object Observables {
 
                         subscriber.onNext(place)
                     } catch (e: SQLException) {
-
                         context.toast(R.string.something_went_wrong_with_adding_new_location)
                         Timber.e(e, "Cannot add city $address lookupName: $lookupPlace lat ${address.latitude} lon ${address.longitude}")
                         subscriber.onError(e)

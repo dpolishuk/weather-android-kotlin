@@ -21,7 +21,11 @@ public class DatabaseHelper : OrmLiteSqliteOpenHelper {
 
     @Volatile private var placeDao: Dao<Place, Long>? = null
 
-    var predefinedCities = arrayOf(Place("Dublin", 53.34410, -6.2674), Place("London", 51.51121, -0.1198), Place("New York", 40.71278, -74.00594), Place("Barcelona", 41.3850, 2.1734))
+    var predefinedCities = arrayOf(
+            Place("Dublin", 53.34410, -6.2674),
+            Place("London", 51.51121, -0.1198),
+            Place("New York", 40.71278, -74.00594),
+            Place("Barcelona", 41.3850, 2.1734))
 
     public constructor(context: Context, databaseName: String, factory: SQLiteDatabase.CursorFactory,
                        databaseVersion: Int) : super(context, databaseName, factory, databaseVersion, R.raw.ormlite_config) {

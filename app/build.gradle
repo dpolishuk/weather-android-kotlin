@@ -99,8 +99,8 @@ dependencies {
 
   compile 'com.jakewharton:kotterknife:0.1.0-SNAPSHOT'
 
-  compile 'org.jetbrains.anko:anko-sdk15:0.7.2'
-  compile 'org.jetbrains.anko:anko-support-v4:0.7.2'
+  compile 'org.jetbrains.anko:anko-sdk15:0.7.3'
+  compile 'org.jetbrains.anko:anko-support-v4:0.7.3'
 
   kaptTest 'com.google.dagger:dagger-compiler:2.0.1'
   testCompile 'junit:junit:4.11'
