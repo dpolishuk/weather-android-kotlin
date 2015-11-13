@@ -32,6 +32,7 @@ import io.dp.weather.app.event.UpdateListEvent
 import io.dp.weather.app.utils.Observables
 import io.dp.weather.app.widget.ArrayAdapterSearchView
 import org.jetbrains.anko.support.v4.longToast
+import rx.lang.kotlin.subscribeWith
 import java.sql.SQLException
 import javax.inject.Inject
 
@@ -164,9 +165,10 @@ class WeatherFragment : BaseFragment(), LoaderManager.LoaderCallbacks<Cursor>, S
     @Subscribe public fun onAddPlace(event: AddPlaceEvent) {
         Observables.getGeoForPlace(activity, dbHelper, geoCoder, event.lookupPlace)
                 .compose(schedulersManager.applySchedulers<Place>())
-                .subscribe({
-                    bus.post(UpdateListEvent())
-                }, {})
+                .subscribeWith {
+                    onNext { bus.post(UpdateListEvent()) }
+                    onError {  }
+                }
     }
 
     companion object {

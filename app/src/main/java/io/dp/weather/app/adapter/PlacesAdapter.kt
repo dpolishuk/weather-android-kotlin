@@ -29,6 +29,7 @@ import io.dp.weather.app.net.dto.Weather
 import io.dp.weather.app.utils.MetricsController
 import io.dp.weather.app.utils.WhiteBorderCircleTransformation
 import io.dp.weather.app.widget.WeatherFor5DaysView
+import rx.lang.kotlin.subscribeWith
 import timber.log.Timber
 import javax.inject.Inject
 
@@ -116,13 +117,17 @@ class PlacesAdapter
         if (isNeedToUpdate) {
             api.getForecast("${place.lat},${place.lon}", Const.FORECAST_FOR_DAYS)
                     .compose(schedulersManager.applySchedulers<Forecast>())
-                    .subscribe({ forecast ->
-                        prefs.edit().putLong(hash + "_time", System.currentTimeMillis()).apply()
-                        prefs.edit().putString(hash, gson.toJson(forecast)).apply()
-                        notifyDataSetChanged()
-                    }, { throwable ->
-                        Timber.e(throwable, "Got throwable")
-                    })
+                    .subscribeWith {
+                        onNext {
+                            prefs.edit().putLong(hash + "_time", System.currentTimeMillis()).apply()
+                            prefs.edit().putString(hash, gson.toJson(it)).apply()
+                            notifyDataSetChanged()
+                        }
+
+                        onError {
+                            Timber.e(it, "Got throwable")
+                        }
+                    }
         } else {
             val forecast = getForecast(place) ?: Forecast()
             holder.fillViewWithForecast(activity, forecast, metrics, transformation)
