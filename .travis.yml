@@ -4,8 +4,8 @@ android:
   components:
     - build-tools-23.0.1
     - android-23
-    - extra-android-m2repository
-    - sys-img-armeabi-v7a-android-23
+    - extra
+    - add-on
   licenses:
     - android-sdk-license-5be876d5
 
@@ -19,7 +19,7 @@ jdk:
 #   - adb shell input keyevent 82 &
 
 script:
-  - ./gradlew clean build
+  - ./gradlew clean build -x test
 
 branches:
   except:
