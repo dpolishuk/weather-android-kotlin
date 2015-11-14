@@ -9,11 +9,11 @@ import io.dp.weather.app.activity.debug.DebugBusModule
  * Created by deepol on 11/09/15.
  */
 class MockActivity : RxFragmentActivity(), HasComponent<BaseActivityComponent> {
-    internal var component: BaseActivityComponent
+    lateinit var myComponent: BaseActivityComponent
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        this.component = createComponent()
+        this.myComponent = createComponent()
     }
 
     override fun createComponent(): BaseActivityComponent {
@@ -23,7 +23,5 @@ class MockActivity : RxFragmentActivity(), HasComponent<BaseActivityComponent> {
         return component.plusSubComponent(DebugBusModule())
     }
 
-    override fun getComponent(): BaseActivityComponent {
-        return component
-    }
+    override fun getComponent(): BaseActivityComponent = myComponent
 }

@@ -25,7 +25,6 @@ import org.robolectric.shadows.ShadowSQLiteConnection
 import org.robolectric.shadows.support.v4.SupportFragmentTestUtil
 import java.io.IOException
 import java.util.*
-import javax.inject.Inject
 
 /**
  * Created by dp on 10/10/14.
@@ -34,11 +33,11 @@ import javax.inject.Inject
 @Config(constants = BuildConfig::class,
         application = TestApp::class,
         manifest = "app/src/test/TestAndroidManifest.xml",
-        resourceDir = "../main/res", sdk = 21)
+        resourceDir = "../main/res", sdk = intArrayOf(23))
 class WeatherFragmentTest {
-    @Inject lateinit  var geocoder: Geocoder
+    lateinit var geocoder: Geocoder
 
-    @Inject lateinit  var databaseHelper: DatabaseHelper
+    lateinit var databaseHelper: DatabaseHelper
 
     @Before @Throws(Exception::class)
     fun setUp() {

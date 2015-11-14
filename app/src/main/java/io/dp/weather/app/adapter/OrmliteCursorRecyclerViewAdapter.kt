@@ -1,15 +1,12 @@
 package io.dp.weather.app.adapter
 
-import android.content.Context
 import android.database.Cursor
 import android.support.v7.widget.RecyclerView
-
 import com.j256.ormlite.android.AndroidDatabaseResults
 import com.j256.ormlite.stmt.PreparedQuery
-
 import java.sql.SQLException
 
-abstract class OrmliteCursorRecyclerViewAdapter<T, VH : RecyclerView.ViewHolder>(context: Context) : CursorRecyclerViewAdapter<VH>(null) {
+abstract class OrmliteCursorRecyclerViewAdapter<T, VH : RecyclerView.ViewHolder>() : CursorRecyclerViewAdapter<VH>(null) {
     var preparedQuery: PreparedQuery<T>? = null
 
     abstract fun onBindViewHolder(holder: VH, t: T)

@@ -38,7 +38,7 @@ class PlacesAdapter
 @Inject constructor(val activity: FragmentActivity,
                     val gson: Gson,
                     val api: WeatherApi,
-                    val bus: Bus) : OrmliteCursorRecyclerViewAdapter<Place, PlacesAdapter.Holder>(activity) {
+                    val bus: Bus) : OrmliteCursorRecyclerViewAdapter<Place, PlacesAdapter.Holder>() {
 
     private val cache = LruCache<Long, Forecast>(16)
 

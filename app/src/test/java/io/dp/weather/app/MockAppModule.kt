@@ -7,6 +7,7 @@ import android.location.Geocoder
 import android.preference.PreferenceManager
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
+import com.google.gson.reflect.TypeToken
 import com.squareup.otto.Bus
 import dagger.Module
 import dagger.Provides
@@ -34,6 +35,8 @@ import javax.inject.Singleton
  */
 @Module class MockAppModule(internal val app: WeatherApp) {
 
+    inline fun <reified T> Gson.fromJson(json: String) = this.fromJson<T>(json, object: TypeToken<T>() {}.type)
+
     @Provides @Singleton fun provideApplication(): Application {
         return app
     }
@@ -56,8 +59,9 @@ import javax.inject.Singleton
 
         val mock = MockRestAdapter.from(restAdapter)
 
-        val f = gson.fromJson(TestUtils.WEATHER_JSON, Forecast::class.javaClass)
-        return mock.create(WeatherApi::class.javaClass, MockWeatherApi(f))
+        val f = gson.fromJson<Forecast>(TestUtils.WEATHER_JSON)
+        val mockWeatherApi = MockWeatherApi(f)
+        return mock.create(WeatherApi::class.java, mockWeatherApi)
     }
 
     @Provides @Singleton fun providePlacesApi(): PlacesApi {
@@ -110,7 +114,7 @@ import javax.inject.Singleton
         return Schedulers.immediate()
     }
 
-    inner class MockWeatherApi(internal var forecast: Forecast) : WeatherApi {
+    class MockWeatherApi(val forecast: Forecast) : WeatherApi {
 
         override fun getForecast(@Query("q") params: String,
                                  @Query("num_of_days") days: Int): Observable<Forecast> {
