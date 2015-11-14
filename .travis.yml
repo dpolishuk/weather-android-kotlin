@@ -1,35 +1,19 @@
 language: android
 
+jdk:
+ - oraclejdk8
+
 android:
   components:
     - build-tools-23.0.1
     - android-23
-    - extra
-    - add-on
-  licenses:
-    - android-sdk-license-5be876d5
+    - extra-android-m2repository
 
-jdk:
-  - oraclejdk8
-
-# before_script:
-#   - echo no | android create avd --force -n test -t android-21 --abi armeabi-v7a
-#   - emulator -avd test -no-skin -no-audio -no-window &
-#   - android-wait-for-emulator
-#   - adb shell input keyevent 82 &
-
-script:
-  - ./gradlew clean build -x test
-
-branches:
-  except:
-    - gh-pages
+env:
+  global:
+    - ADB_INSTALL_TIMEOUT=8
 
 notifications:
   email: false
 
 sudo: false
-
-cache:
-  directories:
-    - $HOME/.gradle
