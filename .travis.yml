@@ -13,7 +13,18 @@ env:
   global:
     - ADB_INSTALL_TIMEOUT=8
 
+script:
+  - ./gradlew clean build -x test
+
+branches:
+  except:
+    - gh-pages
+
 notifications:
   email: false
 
 sudo: false
+
+cache:
+  directories:
+    - $HOME/.gradle

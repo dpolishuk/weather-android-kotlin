@@ -8,11 +8,9 @@ import android.support.v4.app.LoaderManager
 import android.support.v4.content.Loader
 import android.support.v4.view.MenuItemCompat
 import android.support.v4.widget.SwipeRefreshLayout
-import android.support.v7.widget.RecyclerView
 import android.support.v7.widget.StaggeredGridLayoutManager
 import android.view.*
 import android.widget.AdapterView
-import butterknife.bindView
 import com.squareup.otto.Bus
 import com.squareup.otto.Subscribe
 import io.dp.weather.app.BusSubcomponent
@@ -31,6 +29,8 @@ import io.dp.weather.app.event.DeletePlaceEvent
 import io.dp.weather.app.event.UpdateListEvent
 import io.dp.weather.app.utils.Observables
 import io.dp.weather.app.widget.ArrayAdapterSearchView
+import kotlinx.android.synthetic.fragment_weather.recycler
+import kotlinx.android.synthetic.fragment_weather.swipe_layout
 import org.jetbrains.anko.support.v4.longToast
 import rx.lang.kotlin.subscribeWith
 import java.sql.SQLException
@@ -45,9 +45,6 @@ class WeatherFragment : BaseFragment(), LoaderManager.LoaderCallbacks<Cursor>, S
     @Inject lateinit var placesAutoCompleteAdapter: PlacesAutoCompleteAdapter
     @Inject lateinit var schedulersManager: SchedulersManager
 
-    val recyclerView: RecyclerView by bindView(R.id.recycler)
-    val swipeRefreshView: SwipeRefreshLayout by bindView(R.id.swipe_layout)
-
     override fun onCreateView(inflater: LayoutInflater?, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
         return inflater!!.inflate(R.layout.fragment_weather, container, false)
@@ -56,8 +53,8 @@ class WeatherFragment : BaseFragment(), LoaderManager.LoaderCallbacks<Cursor>, S
     override fun onViewCreated(view: View?, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        swipeRefreshView.setOnRefreshListener(this)
-        recyclerView.layoutManager = StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL)
+        swipe_layout.setOnRefreshListener(this)
+        recycler.layoutManager = StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL)
     }
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
@@ -66,7 +63,7 @@ class WeatherFragment : BaseFragment(), LoaderManager.LoaderCallbacks<Cursor>, S
         (component as BusSubcomponent).inject(this)
 
         adapter.preparedQuery = Queries.prepareCityQuery(dbHelper)
-        recyclerView.adapter = adapter
+        recycler.adapter = adapter
 
         loaderManager.restartLoader(0, null, this)
 
@@ -141,10 +138,10 @@ class WeatherFragment : BaseFragment(), LoaderManager.LoaderCallbacks<Cursor>, S
     override fun onLoaderReset(loader: Loader<Cursor>) = adapter.changeCursor(null)
 
     override fun onRefresh() {
-        swipeRefreshView.isRefreshing = true
+        swipe_layout.isRefreshing = true
         adapter.clear()
         adapter.notifyDataSetChanged()
-        swipeRefreshView.isRefreshing = false
+        swipe_layout.isRefreshing = false
     }
 
     @Subscribe public fun onUpdateList(event: UpdateListEvent) {

@@ -8,11 +8,7 @@ import android.support.v7.widget.RecyclerView
 import android.text.format.DateUtils
 import android.view.View
 import android.view.ViewGroup
-import android.widget.ImageView
 import android.widget.PopupMenu
-import android.widget.ProgressBar
-import android.widget.TextView
-import butterknife.bindView
 import com.google.gson.Gson
 import com.squareup.otto.Bus
 import com.squareup.picasso.Picasso
@@ -28,7 +24,12 @@ import io.dp.weather.app.net.dto.Forecast
 import io.dp.weather.app.net.dto.Weather
 import io.dp.weather.app.utils.MetricsController
 import io.dp.weather.app.utils.WhiteBorderCircleTransformation
-import io.dp.weather.app.widget.WeatherFor5DaysView
+import io.dp.weather.app.utils.edit
+import kotlinx.android.synthetic.item_city_weather.view.city_name
+import kotlinx.android.synthetic.item_city_weather.view.content
+import kotlinx.android.synthetic.item_city_weather.view.menu
+import kotlinx.android.synthetic.item_city_weather.view.progress
+import kotlinx.android.synthetic.item_place_content.view.*
 import rx.lang.kotlin.subscribeWith
 import timber.log.Timber
 import javax.inject.Inject
@@ -100,18 +101,21 @@ class PlacesAdapter
         val isNeedToUpdate = prefs.isNeedToUpdateWeather(hash)
 
         with (holder) {
-            cityName.text = place.name
-            temperatureView.text = ""
+            with (itemView) {
+                city_name.text = place.name
+                temperature.text = ""
 
-            menuView.tag = place.id
-            menuView.setOnClickListener(popupOnClickListener)
+                menu.tag = place.id
+                menu.setOnClickListener(popupOnClickListener)
 
-            when {
-                metrics.useCelsius -> degreeTypeView.setText(R.string.celcius)
-                else -> degreeTypeView.setText(R.string.fahrenheit)
+                when {
+                    metrics.useCelsius -> degrees_type.setText(R.string.celcius)
+                    else -> degrees_type.setText(R.string.fahrenheit)
+                }
+
+                progress.visibility = if (isNeedToUpdate) View.VISIBLE else View.GONE
+                content.visibility = if (isNeedToUpdate) View.GONE else View.VISIBLE
             }
-            progressView.visibility = if (isNeedToUpdate) View.VISIBLE else View.GONE
-            contentView.visibility = if (isNeedToUpdate) View.GONE else View.VISIBLE
         }
 
         if (isNeedToUpdate) {
@@ -119,8 +123,10 @@ class PlacesAdapter
                     .compose(schedulersManager.applySchedulers<Forecast>())
                     .subscribeWith {
                         onNext {
-                            prefs.edit().putLong(hash + "_time", System.currentTimeMillis()).apply()
-                            prefs.edit().putString(hash, gson.toJson(it)).apply()
+                            prefs.edit {
+                                arrayOf(hash + "_time" to System.currentTimeMillis(),
+                                hash to gson.toJson(it))
+                            }
                             notifyDataSetChanged()
                         }
 
@@ -155,68 +161,59 @@ class PlacesAdapter
     }
 
     class Holder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        val weatherState: ImageView by bindView(R.id.weather_state)
-        val cityName: TextView by bindView(R.id.city_name)
-        val weatherFor5DaysView: WeatherFor5DaysView by bindView(R.id.weather_for_week)
-        val temperatureView: TextView by bindView(R.id.temperature)
-        val degreeTypeView: TextView by bindView(R.id.degrees_type)
-        val weatherDescView: TextView by bindView(R.id.weather_description)
-        val progressView: ProgressBar by bindView(R.id.progress)
-        val contentView: View by bindView(R.id.content)
-        val menuView: View by bindView(R.id.menu)
-        val humidityView: TextView by bindView(R.id.humidity)
-        val pressureView: TextView by bindView(R.id.pressure)
-        val windView: TextView by bindView(R.id.wind)
 
         fun fillViewWithForecast(context: Context, forecast: Forecast, metrics: MetricsController, transformation: WhiteBorderCircleTransformation) {
             val conditions = forecast.data?.currentCondition
             if (conditions?.isNotEmpty() ?: false) {
                 val condition = conditions?.get(0)
 
-                humidityView.text = "${condition?.humidity} %"
+                with (itemView) {
+                    humidity.text = "${condition?.humidity} %"
 
-                try {
-                    val pressure = Integer.valueOf(condition?.pressure)!!
+                    try {
+                        val pressure_val = Integer.valueOf(condition?.pressure)!!
 
-                    pressureView.text = when {
-                        metrics.useMmhg -> context.getString(R.string.fmt_pressure_mmhg, (pressure * Const.CONVERT_MMHG).toInt())
-                        else -> context.getString(R.string.fmt_pressure_kpa, pressure)
+                        pressure.text = when {
+                            metrics.useMmhg -> context.getString(R.string.fmt_pressure_mmhg, (pressure_val * Const.CONVERT_MMHG).toInt())
+                            else -> context.getString(R.string.fmt_pressure_kpa, pressure_val)
+                        }
+                    } catch (e: NumberFormatException) {
+                        pressure.setText(R.string.undef)
                     }
-                } catch (e: NumberFormatException) {
-                    pressureView.setText(R.string.undef)
+
+                    val metric = when {
+                        metrics.useKmph -> context.getString(R.string.fmt_windspeed_kmph, condition?.windspeedKmph ?: "")
+                        else -> context.getString(R.string.fmt_windspeed_mph, condition?.windspeedMiles ?: "")
+                    }
+
+                    wind.text = "${condition?.winddir16Point}, $metric"
+
+                    val descList = condition?.weatherDesc
+                    if (descList?.isNotEmpty() ?: false) {
+                        val description = descList?.get(0)?.value ?: ""
+                        weather_description.text = description
+                    }
+
+                    when {
+                        metrics.useCelsius -> temperature.text = condition?.tempC ?: ""
+                        else -> temperature.text = condition?.tempF ?: ""
+                    }
+
+                    val urls = conditions?.get(0)?.weatherIconUrl
+
+                    if (urls?.isNotEmpty() ?: false) {
+                        val url = urls?.get(0)?.value ?: ""
+                        Picasso.with(context)
+                                .load(url)
+                                .transform(transformation)
+                                .into(weather_state)
+                    }
                 }
 
-                val metric = when {
-                    metrics.useKmph -> context.getString(R.string.fmt_windspeed_kmph, condition?.windspeedKmph ?: "")
-                    else -> context.getString(R.string.fmt_windspeed_mph, condition?.windspeedMiles ?: "")
-                }
-
-                windView.text = "${condition?.winddir16Point}, $metric"
-
-                val descList = condition?.weatherDesc
-                if (descList?.isNotEmpty() ?: false) {
-                    val description = descList?.get(0)?.value ?: ""
-                    weatherDescView.text = description
-                }
-
-                when {
-                    metrics.useCelsius -> temperatureView.text = condition?.tempC ?: ""
-                    else -> temperatureView.text = condition?.tempF ?: ""
-                }
-
-                val urls = conditions?.get(0)?.weatherIconUrl
-
-                if (urls?.isNotEmpty() ?: false) {
-                    val url = urls?.get(0)?.value ?: ""
-                    Picasso.with(context)
-                            .load(url)
-                            .transform(transformation)
-                            .into(weatherState)
-                }
             }
 
             val weather5days = forecast.data?.weather ?: listOf<Weather>()
-            weatherFor5DaysView.setWeatherForWeek(weather5days, metrics.useCelsius, transformation)
+            itemView.weather_for_week.setWeatherForWeek(weather5days, metrics.useCelsius, transformation)
         }
     }
 }
