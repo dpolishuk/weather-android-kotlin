@@ -8,18 +8,18 @@ import android.view.LayoutInflater
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
-import butterknife.bindViews
 import com.squareup.picasso.Picasso
 import com.squareup.picasso.Transformation
 import io.dp.weather.app.R
 import io.dp.weather.app.net.dto.Weather
+import kotlinx.android.synthetic.view_weather_for_week.view.*
 import java.sql.Date
 
 public class WeatherFor5DaysView : LinearLayout {
 
-    val dayNameViews: List<TextView> by bindViews(R.id.day_name_1, R.id.day_name_2, R.id.day_name_3, R.id.day_name_4, R.id.day_name_5)
-    val dayViews: List<ImageView> by bindViews(R.id.day_1, R.id.day_2, R.id.day_3, R.id.day_4, R.id.day_5)
-    val tempViews: List<TextView> by bindViews(R.id.temp_1, R.id.temp_2, R.id.temp_3, R.id.temp_4, R.id.temp_5)
+    lateinit var dayNameViews: List<TextView>
+    lateinit var dayViews: List<ImageView>
+    lateinit var tempViews: List<TextView>
 
     lateinit var transformation: Transformation
 
@@ -39,6 +39,14 @@ public class WeatherFor5DaysView : LinearLayout {
 
         celsius = context.getString(R.string.celcius)
         fahrenheit = context.getString(R.string.fahrenheit)
+    }
+
+    override fun onFinishInflate() {
+        super.onFinishInflate()
+
+        dayNameViews = arrayListOf(day_name_1, day_name_2, day_name_3, day_name_4, day_name_5)
+        dayViews = arrayListOf(day_1, day_2, day_3, day_4, day_5)
+        tempViews = arrayListOf(temp_1, temp_2, temp_3, temp_4, temp_5)
     }
 
     public fun setWeatherForWeek(weatherList: List<Weather>, useCelsius: Boolean, transformation: Transformation) {

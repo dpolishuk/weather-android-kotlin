@@ -29,8 +29,6 @@ import io.dp.weather.app.event.DeletePlaceEvent
 import io.dp.weather.app.event.UpdateListEvent
 import io.dp.weather.app.utils.Observables
 import io.dp.weather.app.widget.ArrayAdapterSearchView
-import kotlinx.android.synthetic.fragment_weather.recycler
-import kotlinx.android.synthetic.fragment_weather.swipe_layout
 import org.jetbrains.anko.support.v4.longToast
 import rx.lang.kotlin.subscribeWith
 import java.sql.SQLException
@@ -144,11 +142,11 @@ class WeatherFragment : BaseFragment(), LoaderManager.LoaderCallbacks<Cursor>, S
         swipe_layout.isRefreshing = false
     }
 
-    @Subscribe public fun onUpdateList(event: UpdateListEvent) {
+    @Subscribe fun onUpdateList(event: UpdateListEvent) {
         loaderManager.restartLoader(0, null, this)
     }
 
-    @Subscribe public fun onDeletePlace(event: DeletePlaceEvent) {
+    @Subscribe fun onDeletePlace(event: DeletePlaceEvent) {
         if (event.id != null) {
             try {
                 dbHelper.getPlaceDao()!!.deleteById(event.id)
@@ -159,7 +157,7 @@ class WeatherFragment : BaseFragment(), LoaderManager.LoaderCallbacks<Cursor>, S
         }
     }
 
-    @Subscribe public fun onAddPlace(event: AddPlaceEvent) {
+    @Subscribe fun onAddPlace(event: AddPlaceEvent) {
         Observables.getGeoForPlace(activity, dbHelper, geoCoder, event.lookupPlace)
                 .compose(schedulersManager.applySchedulers<Place>())
                 .subscribeWith {

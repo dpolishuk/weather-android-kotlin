@@ -3,7 +3,6 @@ package io.dp.weather.app.adapter
 import android.content.Context
 import android.content.SharedPreferences
 import android.support.v4.app.FragmentActivity
-import android.support.v4.util.LruCache
 import android.support.v7.widget.RecyclerView
 import android.text.format.DateUtils
 import android.view.View
@@ -24,11 +23,8 @@ import io.dp.weather.app.net.dto.Forecast
 import io.dp.weather.app.net.dto.Weather
 import io.dp.weather.app.utils.MetricsController
 import io.dp.weather.app.utils.WhiteBorderCircleTransformation
-import io.dp.weather.app.utils.edit
-import kotlinx.android.synthetic.item_city_weather.view.city_name
-import kotlinx.android.synthetic.item_city_weather.view.content
-import kotlinx.android.synthetic.item_city_weather.view.menu
-import kotlinx.android.synthetic.item_city_weather.view.progress
+import io.dp.weather.app.utils.myEdit
+import kotlinx.android.synthetic.item_city_weather.view.*
 import kotlinx.android.synthetic.item_place_content.view.*
 import rx.lang.kotlin.subscribeWith
 import timber.log.Timber
@@ -41,7 +37,7 @@ class PlacesAdapter
                     val api: WeatherApi,
                     val bus: Bus) : OrmliteCursorRecyclerViewAdapter<Place, PlacesAdapter.Holder>() {
 
-    private val cache = LruCache<Long, Forecast>(16)
+    private val cache = android.support.v4.util.LruCache<Long, Forecast>(16)
 
     private lateinit var schedulersManager: SchedulersManager
     private lateinit var prefs: SharedPreferences
@@ -87,7 +83,7 @@ class PlacesAdapter
             // forecast exists - load it from cache
             val rawForecast = prefs.getString(hash, null)
             forecast = gson.fromJson(rawForecast, Forecast::class.java)
-            if (forecast != null) {
+            forecast?.let {
                 cache.put(place.id, forecast)
             }
         }
@@ -123,9 +119,9 @@ class PlacesAdapter
                     .compose(schedulersManager.applySchedulers<Forecast>())
                     .subscribeWith {
                         onNext {
-                            prefs.edit {
+                            prefs.myEdit {
                                 arrayOf(hash + "_time" to System.currentTimeMillis(),
-                                hash to gson.toJson(it))
+                                        hash to gson.toJson(it))
                             }
                             notifyDataSetChanged()
                         }
@@ -162,16 +158,20 @@ class PlacesAdapter
 
     class Holder(itemView: View) : RecyclerView.ViewHolder(itemView) {
 
-        fun fillViewWithForecast(context: Context, forecast: Forecast, metrics: MetricsController, transformation: WhiteBorderCircleTransformation) {
-            val conditions = forecast.data?.currentCondition
-            if (conditions?.isNotEmpty() ?: false) {
-                val condition = conditions?.get(0)
+        fun fillViewWithForecast(context: Context,
+                                 forecast: Forecast,
+                                 metrics: MetricsController,
+                                 transformation: WhiteBorderCircleTransformation) {
+            with (itemView) {
+                val conditions = forecast.data?.currentCondition
 
-                with (itemView) {
-                    humidity.text = "${condition?.humidity} %"
+                conditions?.isNotEmpty().let {
+                    val condition = conditions.get(0)
+
+                    humidity.text = "${condition.humidity} %"
 
                     try {
-                        val pressure_val = Integer.valueOf(condition?.pressure)!!
+                        val pressure_val = Integer.valueOf(condition.pressure)!!
 
                         pressure.text = when {
                             metrics.useMmhg -> context.getString(R.string.fmt_pressure_mmhg, (pressure_val * Const.CONVERT_MMHG).toInt())
@@ -182,24 +182,24 @@ class PlacesAdapter
                     }
 
                     val metric = when {
-                        metrics.useKmph -> context.getString(R.string.fmt_windspeed_kmph, condition?.windspeedKmph ?: "")
-                        else -> context.getString(R.string.fmt_windspeed_mph, condition?.windspeedMiles ?: "")
+                        metrics.useKmph -> context.getString(R.string.fmt_windspeed_kmph, condition.windspeedKmph ?: "")
+                        else -> context.getString(R.string.fmt_windspeed_mph, condition.windspeedMiles ?: "")
                     }
 
-                    wind.text = "${condition?.winddir16Point}, $metric"
+                    wind.text = "${condition.winddir16Point}, $metric"
 
-                    val descList = condition?.weatherDesc
+                    val descList = condition.weatherDesc
                     if (descList?.isNotEmpty() ?: false) {
                         val description = descList?.get(0)?.value ?: ""
                         weather_description.text = description
                     }
 
                     when {
-                        metrics.useCelsius -> temperature.text = condition?.tempC ?: ""
-                        else -> temperature.text = condition?.tempF ?: ""
+                        metrics.useCelsius -> temperature.text = condition.tempC ?: ""
+                        else -> temperature.text = condition.tempF ?: ""
                     }
 
-                    val urls = conditions?.get(0)?.weatherIconUrl
+                    val urls = conditions.get(0).weatherIconUrl
 
                     if (urls?.isNotEmpty() ?: false) {
                         val url = urls?.get(0)?.value ?: ""
@@ -210,10 +210,9 @@ class PlacesAdapter
                     }
                 }
 
+                val weather5days = forecast.data?.weather ?: listOf<Weather>()
+                weather_for_week.setWeatherForWeek(weather5days, metrics.useCelsius, transformation)
             }
-
-            val weather5days = forecast.data?.weather ?: listOf<Weather>()
-            itemView.weather_for_week.setWeatherForWeek(weather5days, metrics.useCelsius, transformation)
         }
     }
 }

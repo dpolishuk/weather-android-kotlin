@@ -1,5 +1,5 @@
 buildscript {
-  ext.kotlin_version = '1.0.0-beta-1038'
+  ext.kotlin_version = '1.0.0-beta-2423'
   repositories {
     jcenter()
 
@@ -80,6 +80,7 @@ dependencies {
   compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
 
   compile 'com.android.support:appcompat-v7:23.1.0'
+  compile 'com.android.support:recyclerview-v7:23.1.0'
 
   compile 'com.squareup.retrofit:retrofit:1.9.0'
   compile 'com.google.dagger:dagger:2.0.2'
@@ -96,8 +97,6 @@ dependencies {
   compile 'io.reactivex:rxandroid:1.0.1'
   compile 'com.trello:rxlifecycle:0.3.0'
   compile 'com.trello:rxlifecycle-components:0.3.0'
-
-  compile 'com.jakewharton:kotterknife:0.1.0-SNAPSHOT'
 
   compile 'org.jetbrains.anko:anko-sdk15:0.7.3'
   compile 'org.jetbrains.anko:anko-support-v4:0.7.3'

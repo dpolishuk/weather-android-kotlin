@@ -6,7 +6,7 @@ import android.content.SharedPreferences
  * Created by dp on 15/11/15.
  */
 
-fun SharedPreferences.edit(func: SharedPreferences.Editor.() -> Array<Pair<String, Any>>) : SharedPreferences.Editor {
+fun SharedPreferences.myEdit(func: SharedPreferences.Editor.() -> Array<Pair<String, Any>>) : SharedPreferences.Editor {
     val editor = edit()
 
     val pairs = editor.func()
